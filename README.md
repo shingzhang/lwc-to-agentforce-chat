@@ -1,0 +1,217 @@
+# lwc-to-agentforce-chat
+
+Turn a Figma design into a Lightning Web Component that renders inside an Agentforce chat bubble. The mandatory HTML preview step in the middle lets you review the design in a browser before it becomes LWC.
+
+`v0.3.0` · `experimental` · `Salesforce` · `Agentforce` · `LWC`
+
+---
+
+## Who this is for
+
+- A Salesforce front-end developer at a large retail enterprise who owns Agentforce in-chat experiences.
+- They already have a Figma design; the expensive part is wiring it into the five metadata pieces the chat renderer expects.
+
+## What it does
+
+- **One linear flow with a design-review moment.** Figma → HTML preview (open in your browser and eyeball it) → LWC bundle → 5-piece contract (Apex DTO + LightningType bundle + LWC bundle + Invocable Apex + Agent Script).
+- **The HTML preview step is non-skippable.** LWC has no mid-build browser preview. The intermediary HTML catches misread Figma tokens *before* the transform + write cycle burns time on LWC files you'll have to redo.
+- **Teaches at every step.** Every question is labeled `Step N of ~M — <topic>`. Every substantive action prints a `What / Why / Next` micro-block grounded in a specific LWC constraint or known failure mode.
+- **Never writes to `force-app/` or runs `sf project deploy` without explicit YES.** Load-bearing checkpoints are non-negotiable — planning, implementation, and demo are 100% local until you type YES.
+
+> **Earlier multi-entry version** (Figma / HTML / existing LWC / scan-my-folder) is archived at `~/Documents/claude/plugin homework/lwc-to-agentforce-chat-multi-entry/` for reference.
+
+## Install (fresh clone, <5 min)
+
+From a fresh clone, add the repo as a local marketplace and install the plugin:
+
+```bash
+git clone <this-repo> lwc-to-agentforce-chat   # or download the tarball
+cd lwc-to-agentforce-chat
+claude plugin marketplace add .
+claude plugin install lwc-to-agentforce-chat@shing-plugins
+```
+
+For a one-session smoke test without installing, run:
+
+```bash
+claude --plugin-dir .
+```
+
+No Salesforce auth is required to install or run the local HTML demo.
+
+## Try it in 30 seconds
+
+Bring a Figma file (or a PNG export) and run:
+
+```
+claude
+> I have a Figma design I want in an Agentforce chat card
+```
+
+The skill triggers, asks for a Figma source, extracts the Brand Summary via the `figma-extractor` agent, then writes `<component>.preview.html` for you to open in a browser. Once you approve the preview, it transforms into an LWC bundle and walks the 5-piece contract.
+
+The compatibility shortcut is also namespaced when installed as a plugin:
+
+```
+/lwc-to-agentforce-chat:lwc-in-chat
+```
+
+The slash command drops you straight into the Step 1 prompt for a Figma source.
+
+**No Figma handy?** The bundled `fixtures/example-html/product-card.html` shows what the HTML → LWC transform produces (before/after). It's a reference for what to expect after Step 4, not a runnable entry point.
+
+## What's inside
+
+```
+lwc-to-agentforce-chat/
+├── .claude-plugin/plugin.json      ← plugin manifest
+├── .claude-plugin/marketplace.json ← local fresh-clone install catalog
+├── .mcp.json                       ← official remote Figma MCP server
+├── README.md                       ← this file
+├── GUIDE.md                        ← "build your own plugin" one-pager
+├── CONTRIBUTING.md                 ← contributor principles
+├── CHANGELOG.md
+├── commands/
+│   └── lwc-in-chat.md              ← namespaced compatibility shortcut
+├── skills/
+│   └── lwc-to-agentforce-chat/     ← the skill (SKILL.md + references/ + assets/)
+├── agents/
+│   └── figma-extractor.md          ← subagent for heavy Figma processing
+└── fixtures/
+    └── example-html/       ← HTML→LWC before/after reference for Step 4; not an entry point
+```
+
+## Homework rubric — how this plugin satisfies each requirement
+
+| Requirement | How this plugin satisfies it |
+|---|---|
+| ≥1 agent doing meaningful work | `agents/figma-extractor.md` — read-only agent that extracts a Brand Summary + pattern inference from Figma URLs or images and keeps large payloads out of parent context |
+| ≥1 skill | `skills/lwc-to-agentforce-chat/SKILL.md` — guided linear walkthrough (Figma → HTML preview → LWC), with a mandatory design-review step in the middle |
+| ≥1 hook OR MCP config | `.mcp.json` — official remote Figma MCP server for structured design context |
+| Fresh-clone install <5 min | `git clone → marketplace add . → plugin install` — no Salesforce auth required |
+| Meaningful problem for specific persona | Retail-enterprise Salesforce front-end developer with a Figma design who needs a correctly wired Agentforce in-chat LWC |
+| README explains what/for whom/how | This file |
+
+## Optional Salesforce skill integrations
+
+The plugin is self-contained for local preview. When the following Salesforce skills are already installed, it consults them for deeper platform guidance instead of forking their full content:
+
+- **`experience-cloud-site-builder`** (v1.0, 3920 lines) — for the 5-piece contract templates, deploy sequence (Phase 8), manual UI steps (Phase 9), and 17 failure modes catalog (§C). This plugin references by name; never restates.
+- **`generating-lwc-components`** — for general LWC best practices (a11y, Jest, wire adapters) beyond the 8 HTML→LWC transforms.
+- **`applying-slds`** — for SLDS blueprints and styling hooks when the HTML source lacks them.
+
+## Guardrails
+
+- **No writes to any Salesforce sandbox.** Planning, implementation, and demo are 100% local.
+- **Every file write under `force-app/` requires explicit YES.** Load-bearing checkpoint — no exceptions.
+- **Every `sf project deploy` command is your next step, not the skill's.** The skill previews commands and prints them; you run them.
+- **Figma URL fetches preview the URL before hitting `WebFetch`.** Share URLs can contain tokens — you confirm before it enters WebFetch logs.
+- **Fictional or user-supplied inputs only.** The bundled fixture uses invented names and generic HTML. No real customer names, URLs, or brand tokens ship in this repo. The skill runs against whatever Figma URL you paste in.
+
+## Set up Figma MCP
+
+The plugin ships with Figma's official remote MCP (`https://mcp.figma.com/mcp`) declared in `.mcp.json`. That server gives the `figma-extractor` agent structured access to Figma designs (colors, typography, spacing, node structure). Registration happens automatically when the plugin installs, but the MCP starts unauthenticated. You have to complete OAuth before its tools become available in the session.
+
+**Prerequisites:**
+
+- Figma account (any tier).
+- Figma desktop app installed and running. The remote MCP reads the file through your local Figma app, not the web editor.
+- The target file open in the Figma desktop app during extraction.
+
+**Auth flow:**
+
+1. In a Claude Code session, run `/mcp`.
+2. Find `plugin:lwc-to-agentforce-chat:figma` in the list. It shows `! Needs authentication`.
+3. Select it. A browser tab opens for Figma OAuth. Approve.
+4. Quit Claude Code fully and relaunch (a soft reload isn't enough — MCP connections attach at session start).
+5. Verify with `claude mcp list`. The figma entry should now show `✔ Connected`.
+
+**Using it during the walkthrough:**
+
+1. Open the file in the Figma desktop app. Select the frame you want to convert.
+2. Right-click → **Copy link to selection**. The URL contains `?node-id=X-Y`.
+3. Paste that URL when the skill asks for a Figma source at Step 1.
+4. The `figma-extractor` agent picks Path A (MCP) automatically and returns a Brand Summary plus pattern inference.
+
+If the MCP is unavailable in the session (unauthenticated, disconnected, or removed), the skill falls back to Path B (WebFetch on a public share URL) or Path C (a PNG export you paste in). Path B does **not** work on `figma.com/design/…?m=dev` editor URLs — those are canvas SPAs. Use Path A (authenticated MCP) or Path C (screenshot) for editor URLs.
+
+## Troubleshooting
+
+**The skill said "No Figma MCP is configured" but I know it is.**
+
+The check for Figma MCP availability looks at tools in the current session, not just config files. A `.mcp.json` entry means the MCP is *registered*, but the `mcp__figma__*` tools only appear once the MCP is authenticated and connected. Run `/mcp`, complete OAuth for `plugin:lwc-to-agentforce-chat:figma`, and fully relaunch Claude Code.
+
+**WebFetch fell back but returned nothing useful.**
+
+`figma.com/design/…?m=dev` and other Figma editor URLs are canvas SPAs. WebFetch only sees the login shell. Options:
+
+- Authenticate the Figma MCP (above) and re-run.
+- Export the frame as a PNG from Figma and point the skill at the local path. The extractor supports Path C (image-based extraction).
+- If the design is public, use a share URL from Figma's "Share" button instead of the editor URL bar.
+
+**`claude plugin install .` says "not found in any configured marketplace."**
+
+`claude plugin install <path>` doesn't accept a path directly. Use the two-step flow: `claude plugin marketplace add .` first, then `claude plugin install lwc-to-agentforce-chat@shing-plugins`.
+
+**I moved the plugin folder and the install broke.**
+
+The marketplace registration stores an absolute path. After moving, re-point it:
+
+```
+claude plugin uninstall lwc-to-agentforce-chat@shing-plugins
+claude plugin marketplace remove shing-plugins
+claude plugin marketplace add /new/absolute/path/to/lwc-to-agentforce-chat
+claude plugin install lwc-to-agentforce-chat@shing-plugins
+```
+
+**MCP still shows "Needs authentication" after I clicked through OAuth.**
+
+Quit Claude Code fully and relaunch — a Cmd-R reload isn't enough. MCP connections attach at session start. If it persists after a full relaunch, run `/mcp` and re-authenticate. If you're behind a corporate proxy that intercepts TLS, check that `NODE_EXTRA_CA_CERTS` is set in `~/.claude/settings.json` to your CA bundle path.
+
+**The skill asks for `LWC_BUILD_STATE.md` before I have a project.**
+
+Two valid answers:
+
+- Reply with an absolute path to any writable directory. The skill writes a progress file there.
+- Reply `not yet`. The skill holds state in-memory until you provide a path later.
+
+**The skill previews a URL and asks for YES before every fetch.**
+
+By design. This is a load-bearing checkpoint per the plugin's CLAUDE.md principle #4. Some Figma URLs contain view tokens or session identifiers; the preview lets you confirm before the URL enters WebFetch logs. Reply `YES` to proceed, `N` to switch to a screenshot, or paste a different URL.
+
+**The skill doesn't trigger when I paste a Figma URL.**
+
+The skill triggers on natural-language intent (e.g., "I have a Figma design I want to render in my Agentforce chat"). A bare URL isn't enough context. Force the entry with `/lwc-to-agentforce-chat:lwc-in-chat`, or start with a sentence that names the intent.
+
+**`claude plugin list` doesn't show the plugin.**
+
+Two common causes:
+
+- The marketplace was added but the plugin wasn't installed. Run `claude plugin install lwc-to-agentforce-chat@shing-plugins`.
+- The plugin installed but was disabled. Run `claude plugin enable lwc-to-agentforce-chat@shing-plugins`.
+
+**Deploy step says the Salesforce CLI isn't available.**
+
+The plugin never runs `sf` commands autonomously. It previews the deploy command and asks you to run it yourself. If you don't have `sf` installed, follow the [Salesforce CLI install guide](https://developer.salesforce.com/tools/salesforcecli). The plugin's demo path (`fixtures/example-html/`) works without `sf`.
+
+## Uninstall
+
+```
+/plugin uninstall lwc-to-agentforce-chat
+```
+
+Or delete the plugin directory. Nothing was written to any Salesforce sandbox, so there's no cleanup on the org side.
+
+## License & credits
+
+- MIT-licensed. See `LICENSE`.
+- Built on top of the `experience-cloud-site-builder` v1.0 skill by Shing Diorio.
+- Modeled on FDE conventions from `forward-deployed-engineering-emu/fde-skills/plugins/designing-agentforce`.
+- 5-piece contract, 17 failure modes, and deploy sequence all sourced from `experience-cloud-site-builder` — this plugin references, does not restate.
+
+## See also
+
+- `GUIDE.md` — one-page recipe for building your own plugin around a different entry-point workflow (Miro → Flow, Postman → REST, Airtable → Custom Object, etc.).
+- `CHANGELOG.md` — version history.
+- `skills/lwc-to-agentforce-chat/SKILL.md` — the guided-wizard skill this plugin bundles.
+- `skills/lwc-to-agentforce-chat/references/` — the six reference files the skill consults during walkthroughs.

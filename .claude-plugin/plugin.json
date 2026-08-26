@@ -1,0 +1,19 @@
+{
+  "name": "lwc-to-agentforce-chat",
+  "description": "Turn a Figma design into a Lightning Web Component that renders inside an Agentforce chat bubble. Includes a mandatory HTML preview step in the middle so you can review the design in a browser before it becomes LWC. Bundles the lwc-to-agentforce-chat skill, a read-only figma-extractor subagent, and the official Figma MCP endpoint.",
+  "version": "0.3.0",
+  "author": {
+    "name": "Shing Diorio",
+    "email": "shing.diorio@salesforce.com"
+  },
+  "keywords": [
+    "salesforce",
+    "lwc",
+    "agentforce",
+    "in-chat-card",
+    "figma",
+    "lightning-web-components",
+    "experience-cloud",
+    "front-end"
+  ]
+}
