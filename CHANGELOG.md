@@ -2,6 +2,45 @@
 
 All notable changes to `lwc-to-agentforce-chat` will be documented here. The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.2] — 2026-08-26 · Review feedback: install command, fixture, drift cleanup
+
+Addresses a review that ran the plugin end-to-end and found the shipped repo contradicting itself in several places (single-flow skill next to four-entry references), a broken install command, and a fixture that couldn't exercise the current skill.
+
+### Fixed
+
+- **`README.md` install command.** `claude plugin marketplace add .` returns `Invalid marketplace source format` on Claude Code 2.1.152+. Corrected to `claude plugin marketplace add ./`, matching the local-marketplace docs.
+- **`README.md` clone command.** Replaced the `<this-repo>` placeholder with the real URL `https://github.com/shingzhang/lwc-to-agentforce-chat.git`.
+- **`README.md` Figma MCP prerequisites.** The prior text said the remote MCP required the Figma desktop app. The remote MCP at `mcp.figma.com` is link-based and does not require the desktop app. The desktop-app requirement applies to Figma's separate local MCP server, which this plugin does not ship. Text corrected.
+- **`CONTRIBUTING.md` principle #2** ("One entry point, one lane"). The prior wording still enumerated the four removed entry points (Figma / HTML / existing LWC / scan folder). Rewritten as "One flow, one lane" to match the single Figma-first reality shipped since v0.3.0.
+- **`CONTRIBUTING.md` principle #4** (load-bearing checkpoints). The prior wording said every `LWC_BUILD_STATE.md` overwrite requires explicit YES, which contradicted the skill's actual behavior of updating the canvas after every substantive turn. Aligned with the skill: auto-updates are expected, YES is required only when the user has hand-edited the file between turns.
+### Added
+
+- **`fixtures/example-figma/`** — a runnable 30-second demo fixture. Contains `product-card.png` (a 1200×620 fictional 3-card retail row, "Meadowbrook Market"), `expected-brand-summary.json` (the Brand Summary the extractor should return, including `shopping_carousel` pattern inference at high confidence), and a fixture README explaining how to use it. Replaces the prior HTML fixture, which could not exercise the current Figma-first flow.
+- **README "Try it in 30 seconds"** now points at the new fixture with the exact command a reviewer can copy-paste.
+
+### Changed
+
+- **`references/failure-mode-crosswalk.md`** — Rewrote the "Detected at" column of the full crosswalk table to cite current single-flow step numbers (Step 4 transform, Step 8 Piece 3, Step 10 Piece 5, Step 11 deploy, `V=verify org`) instead of `Entry N Step M`. Deleted the "Detection hooks per entry point" section, which duplicated SKILL.md §C. Replaced with a short "Proactive checks in the single flow" summary that cross-references SKILL.md §C.
+- **`references/teaching-blocks.md`** — Removed the "Switches from one entry point to another" trigger bullet. Replaced 6 stale canonical examples (Entry-labeled, `S=switch path` in every footer, inconsistent step counts) with 3 canonical examples (Step 4, Step 10, Step 11) that intentionally don't duplicate SKILL.md's own three examples.
+- **`references/progress-labels.md`** — Full rewrite. Removed the per-entry-point step-budget table. Replaced with the single ~11-step budget matching SKILL.md §C exactly and the C/V/E/R footer table.
+- **`references/figma-extraction.md`** — Retargeted the "When this reference applies" intro at SKILL.md Step 2 instead of "Entry point 1." Dropped paragraphs about Entries 2/3/4 and Entry 4 folder-scan handoff. Fixed a stale "Step 5's Brand Summary confirmation" reference to "Step 2's."
+- **`references/html-to-lwc-transforms.md`** — Rewrote the intro from "When Entry point 2 fires" to describe the real trigger: Step 4, after the Step 3 HTML preview is approved.
+- **`assets/examples/figma-input.md`** — Full rewrite. Dropped "Entry 1" from the title, removed the fictitious "Step 1 = path picker" framing, removed `S=switch path` footers, re-aligned all step numbers to the ~11-step flow. Aligned Invocable-service naming (`...Service` not `...Controller`) with SKILL.md §B Phase 5.
+- Bumped plugin, marketplace, and skill versions to `0.4.2`.
+
+### Removed
+
+- **`fixtures/example-html/`** — the HTML product-card fixture exercised the removed Entry 2 (HTML → LWC) path. The current skill refuses HTML-only input. Fully deleted.
+- **`references/entry-point-detection.md`** — dead code for the removed multi-entry scan. The v0.3.0 CHANGELOG kept it "in case the multi-entry version is ever restored." That branch is preserved as a sibling directory, so the file inside the shipped plugin is only confusing reviewers. Deleted.
+- **`assets/examples/html-input.html`** — Entry 2 exemplar. Deleted.
+- **`assets/examples/retrofit-input.md`** — Entry 3 exemplar. Deleted.
+- **`assets/templates/` directory** — was already empty. Directory removed.
+
+### Verified
+
+- Independent grep across the plugin (excluding `CHANGELOG.md`) returns zero hits for `Entry 1`/`Entry 2`/`Entry 3`/`Entry 4`, `S=switch`, `switch path`, or any of the five previously cited external skills (`experience-cloud-site-builder`, `building-agentforce-clt-widget`, `generating-lwc-components`, `applying-slds`, `fde-skills`).
+- Net line delta: **−338 lines** across the 18 changed files. Reference material now points at SKILL.md instead of restating it, which addresses the reviewer's "reads overbuilt" observation without dropping any capability.
+
 ## [0.4.1] — 2026-08-26 · Field-tested hardening: hook + ground rules
 
 Two lessons from a full end-to-end run of the plugin against a customer-shaped build:

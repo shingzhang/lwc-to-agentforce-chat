@@ -21,7 +21,7 @@ description: >
 license: MIT
 experimental: true
 metadata:
-  version: "0.4.1"
+  version: "0.4.2"
   last_updated: "2026-08-26"
 allowed-tools:
   - Bash

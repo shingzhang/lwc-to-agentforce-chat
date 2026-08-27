@@ -1,0 +1,28 @@
+{
+  "source": {
+    "type": "png",
+    "raw": "fixtures/example-figma/product-card.png",
+    "resolved_at": "<runtime>"
+  },
+  "brand_summary": {
+    "primary_hex": "#C41E3A",
+    "secondary_hex": "#1A1A1A",
+    "accent_hex": "#F4B942",
+    "text_hex": "#333333",
+    "background_hex": "#FAFAF9",
+    "font_family": "System",
+    "border_radius_px": 14,
+    "shadow_css": "0 2px 8px rgba(0,0,0,0.08)",
+    "logo_ref": null
+  },
+  "pattern_inference": {
+    "guess": "shopping_carousel",
+    "confidence": "high",
+    "rationale": "Three identical horizontal card siblings, each with a product image area, product name, price, and 'Add to Bag' button.",
+    "runner_up": "product_picks"
+  },
+  "notes": [
+    "Fictional brand 'Meadowbrook Market'. No real customer, URL, or metadata.",
+    "The extractor may return a different font_family; the PNG uses a system sans-serif rather than an embedded webfont."
+  ]
+}

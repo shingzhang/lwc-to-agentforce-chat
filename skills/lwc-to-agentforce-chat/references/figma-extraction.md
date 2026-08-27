@@ -2,9 +2,9 @@
 
 ## When this reference applies
 
-Consulted from Entry point 1 of `lwc-to-agentforce-chat` — when the user has a Figma design (URL, share link, exported PNG, or JPG) and wants to turn it into an LWC that renders inside an Agentforce chat bubble. The parent skill routes here at Step 3 of Entry 1 (the "extract design tokens" step) and again at Step 4 (the "infer pattern from visual structure" step).
+Consulted from `SKILL.md` Step 2 (§B Phase 1), when the user has a Figma design (URL, share link, exported PNG, or JPG) and wants to turn it into an LWC that renders inside an Agentforce chat bubble. Step 2 both extracts the design tokens and infers the pattern from the visual structure; both happen in this one step, and this file covers both.
 
-Not consulted from Entries 2, 3, or 4 unless the user pivots mid-flow. If Entry 4 (folder scan) detects Figma-shaped assets and the user picks Entry 1, we land here. If the user provided a public URL at Step 1 as source material, we run this reference before the surface picker even shows.
+If the user pastes a Figma URL or file path with their first message, the skill skips the opening prompt and runs this reference immediately.
 
 ## Path A — Figma MCP (if available in the session)
 
@@ -108,7 +108,7 @@ Do not fetch until YES. If the user pastes a screenshot path instead, switch to 
 
 ## Brand Summary output shape
 
-Print this exact shape after extraction completes (regardless of which path ran). The parent skill uses this as input to Step 5's Brand Summary confirmation:
+Print this exact shape after extraction completes (regardless of which path ran). The parent skill uses this as input to Step 2's Brand Summary confirmation:
 
 ```
 Brand Summary

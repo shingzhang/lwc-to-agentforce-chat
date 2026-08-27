@@ -2,7 +2,7 @@
 
 *Version 2 — a one-page guide for frontend developers*
 
-A good plugin usually starts as a conversation you are tired of repeating—not as a plugin folder.
+A good plugin usually starts as a conversation you are tired of repeating.
 
 To see how, build something deliberately playful:
 
@@ -77,7 +77,7 @@ product-configurator-plugin/
 └── README.md
 ```
 
-## Step 5: Make another developer prove it works
+## Step 5: Have another developer prove it works
 
 From a fresh clone, run:
 
@@ -90,6 +90,6 @@ Follow the README literally. A new developer should understand who the plugin se
 
 If success still depends on your memory, an undocumented correction, or a lucky conversation, the plugin is not finished.
 
-## The rule to keep
+## TLDR
 
 Build the example. Learn through iteration. Save the reusable behavior as a skill. Package it as a plugin only when the complete capability is worth installing and sharing.

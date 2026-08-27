@@ -1,4 +1,4 @@
-# Example — Entry 1 (Figma) walked through
+# Example — Figma walkthrough
 
 > Generic walkthrough. Bring your own public Figma URL. Placeholder brand
 > tokens below are illustrative only.
@@ -21,26 +21,31 @@ User: I have a Figma design I want to render in my Agentforce chat.
 
 ## What the skill emits
 
-```
-Step 1 of ~12 — Path picked: Entry 1 (Figma → LWC → chat).
+Since a Figma URL arrived with the first message, the skill skips the
+opening prompt and goes straight to Step 2 (extraction):
 
-Step 2 of ~12 — Fetching the Figma frame. Preview URL:
+```
+✓ Figma URL captured. State canvas created at LWC_BUILD_STATE.md.
+
+Step 2 of ~11 — Fetching the Figma frame. Preview URL:
   <the-URL-you-pasted>
   Reply YES to proceed.
 
 [user: YES]
 
-✓ Step 3 of ~12 — Extracted brand tokens from Figma.
+✓ Step 2 of ~11 — Extracted brand tokens from Figma.
 
   What: Pulled primary <#RRGGBB>, secondary <#RRGGBB>, accent <#RRGGBB>,
         font <family>, radius <N>px, shadow <css-shadow>
-        from frame <node-id>.
+        from frame <node-id>. Pattern inferred: shopping_carousel.
   Why:  These become the LWC's CSS variables so the card matches
         the customer's brand instead of rendering generic gray/white.
-  Next: Step 4 — I'll infer which of the 4 preset patterns this
-        Figma matches.
+        Extracting the pattern now means the HTML preview at Step 3
+        matches your design instead of a generic template.
+  Next: Step 3 — I'll generate a full HTML preview of the card so you
+        can review it in a browser before we transform to LWC.
 
-? · C=state · S=switch path
+? · C=state
 ```
 
 ## Brand Summary produced
@@ -56,6 +61,7 @@ Background: #<hex>
 Font:       <family>
 Border R:   <N>px
 Shadow:     <css-shadow>
+Pattern:    shopping_carousel (high confidence)
 ─────────────────────────────
 ```
 
@@ -71,9 +77,11 @@ Shadow:     <css-shadow>
 | LWC bundle | `<prefix>ShoppingCarousel` |
 | LightningType folder | `<Prefix>_ShoppingCarousel` |
 | Apex DTO class | `<Prefix>ShoppingCarouselData` |
-| Invocable service | `<Prefix>ShoppingCarouselController` |
+| Invocable service | `<Prefix>ShoppingCarouselService` |
 | Agent Script action | `show_carousel` |
 
-From here the skill walks Steps 4–12 (pattern confirm → naming → preview
-Piece 1 → preview Piece 2 → ... → deploy checkpoint) with a What/Why/Next
-block after each write.
+From here the skill walks Steps 3–11 (HTML preview + review → LWC transform
+→ naming → preview Piece 1 → preview Piece 2 → ... → deploy checkpoint)
+with a What/Why/Next block after each write. The HTML preview at Step 3 is
+mandatory and non-skippable; the skill does not generate the LWC bundle
+until the user replies YES to the preview.

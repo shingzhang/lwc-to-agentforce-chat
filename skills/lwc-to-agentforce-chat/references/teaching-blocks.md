@@ -39,7 +39,6 @@ Every time the skill:
 - Names an identifier (LWC bundle name, LightningType folder, DTO class, Invocable class, agent action)
 - Reaches a load-bearing checkpoint (see main SKILL.md)
 - Applies a Failure-Mode-preventing patch
-- Switches from one entry point to another
 
 **NOT** when the skill:
 
@@ -50,80 +49,46 @@ Every time the skill:
 
 ---
 
-## 6 canonical examples
+## Canonical examples
 
-One per entry-point situation. Copy the shape verbatim.
+Three examples covering steps not already shown in `SKILL.md` §C ("Three canonical examples" covers Step 2 extraction, Step 3 HTML preview, and Step 8 LWC bundle write). Copy the shape verbatim.
 
-### Example 1 — Figma extraction complete (Entry 1)
-
-```
-✓ Step 3 of ~12 — Extracted brand tokens from Figma.
-
-  What: Pulled primary #C41E3A, secondary #1A1A1A, accent #FFB81C, font Inter, radius 8px from your Figma frame.
-  Why:  These tokens become the LWC's CSS variables, so the card matches your brand instead of rendering generic gray/white.
-  Next: Step 4 — I'll infer which of the 4 preset patterns your Figma matches (shopping carousel, scheduler, order status, product picks).
-
-? · C=state · S=switch path
-```
-
-### Example 2 — HTML transform applied (Entry 2, transform #1)
+### Example 1 — HTML transform applied (Step 4, transform #1)
 
 ```
 ✓ Step 4 of ~11 — Rewrote 3 button handlers for LWC.
 
-  What: Changed <button onclick="handleClick()"> → <button onclick={handleClick}> across 3 buttons in your shoppingCarousel.html.
+  What: Changed <button onclick="handleClick()"> → <button onclick={handleClick}> across 3 buttons in your approved shoppingCarousel.preview.html.
   Why:  LWC binds handlers as method references at compile time; parens would trigger eval at parse and fail the build. Failure Mode: compile-time error, easy to catch.
-  Next: Step 5 — I'll extract your inline styles into a scoped .css sibling file.
+  Next: Step 5 — naming (prefix, LWC bundle, DTO class, LightningType folder).
 
-? · C=state · S=switch path
+? · C=state
 ```
 
-### Example 3 — `@api value` patch (Entry 3 retrofit)
+### Example 2 — Piece 5 (`.agent`) written
 
 ```
-✓ Step 6 of ~9 — Patched @api value into a reactive getter/setter.
-
-  What: Replaced `@api value;` with a getter/setter pair that re-parses the incoming DTO's productsJSON on every update.
-  Why:  The chat client can update `value` after mount; a plain @api prop reads once and never re-renders. This is Failure Mode #9 — "Card mounts, value populated, template renders blank."
-  Next: Step 7 — I'll verify your .js-meta.xml has the lightning__AgentforceOutput target and a targetConfigs binding.
-
-? · C=state · S=switch path · V=verify org
-```
-
-### Example 4 — State detection (Entry 3)
-
-```
-✓ Step 2 of ~9 — Detected existing pieces of the 5-piece contract.
-
-  What: Found your LWC bundle at force-app/main/default/lwc/retailPersonalizedPicks/ and the DTO RetailProductPicksData.cls. Missing: LightningType bundle, Invocable Apex, Agent Script action.
-  Why:  The 5-piece contract needs all five pieces to render in chat. You have 2 of 5. We'll add 2, 4, 5 next.
-  Next: Step 3 — I'll preview the LightningType bundle that binds your DTO to your LWC.
-
-? · C=state · S=switch path
-```
-
-### Example 5 — Piece 5 (`.agent`) written
-
-```
-✓ Step 10 of ~12 — Wrote Agent Script action for the carousel.
+✓ Step 10 of ~11 — Wrote Agent Script action for the carousel.
 
   What: Added `show_carousel` action to your .agent file with `is_displayable: True` and `complex_data_type_name: "c__Retail_Shopping_Carousel"`.
   Why:  These two lines are the whole difference between a chat that renders raw JSON and one that mounts your LWC. Failure Mode #7 — "Card replaced by text" — is what happens without them.
   Next: Step 11 — Deploy checkpoint. I'll print the exact sequence for you to run.
 
-? · C=state · S=switch path · V=verify org · E=export docs
+Type R for details on Failure Mode #7.
+
+? · C=state · V=verify org
 ```
 
-### Example 6 — Deploy checkpoint (never runs autonomously)
+### Example 3 — Deploy checkpoint (never runs autonomously)
 
 ```
-✓ Step 11 of ~12 — Deploy sequence ready.
+✓ Step 11 of ~11 — Deploy sequence ready.
 
   What: All 5 pieces are written locally. Preview: 4 Apex files, 1 LWC bundle, 1 LightningType bundle, 1 agent bundle, 1 permission set.
   Why:  This skill never runs `sf project deploy start`. Deploy order matters (Apex first → LightningType + LWC together → PermSet → CspTrustedSite → agent validate/publish/activate → assign permset to bot user with --on-behalf-of). Running out of order breaks the deploy.
   Next: Type `sf project deploy start ...` (I'll print the full commands). Or type `E=export docs` to generate BUILD_PROCESS.md first.
 
-? · C=state · S=switch path · V=verify org · E=export docs
+? · C=state · V=verify org · E=export docs
 ```
 
 ---

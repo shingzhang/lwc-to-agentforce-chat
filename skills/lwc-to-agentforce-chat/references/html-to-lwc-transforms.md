@@ -1,6 +1,6 @@
 # HTML → LWC Transformations — reference
 
-When Entry point 2 fires (user has an HTML/CSS prototype), the skill runs these 8 transforms in order. Each transform is teachable — the What/Why/Next micro-block cites the transform by number so the user learns *why* the change is needed, not just *that* it happened.
+At Step 4 (§B Phase 2), once the user has approved the HTML preview generated at Step 3, the skill runs these 8 transforms in order against that approved HTML. Each transform is teachable — the What/Why/Next micro-block cites the transform by number so the user learns *why* the change is needed, not just *that* it happened.
 
 Transforms 1–8 are applied to the source HTML in sequence. The three "receiving wrapper" additions (§ **The receiving wrapper**) come after, once the LWC template is clean. The end-to-end example at the bottom shows all four files (`.html`, `.css`, `.js`, `.js-meta.xml`) side-by-side.
 

@@ -2,7 +2,7 @@
 
 Turn a Figma design into a Lightning Web Component that renders inside an Agentforce chat bubble. The mandatory HTML preview step in the middle lets you review the design in a browser before it becomes LWC.
 
-`v0.4.1` · `experimental` · `Salesforce` · `Agentforce` · `LWC`
+`v0.4.2` · `experimental` · `Salesforce` · `Agentforce` · `LWC`
 
 ---
 
@@ -27,11 +27,13 @@ Turn a Figma design into a Lightning Web Component that renders inside an Agentf
 From a fresh clone, add the repo as a local marketplace and install the plugin:
 
 ```bash
-git clone <this-repo> lwc-to-agentforce-chat   # or download the tarball
+git clone https://github.com/shingzhang/lwc-to-agentforce-chat.git
 cd lwc-to-agentforce-chat
-claude plugin marketplace add .
+claude plugin marketplace add ./
 claude plugin install lwc-to-agentforce-chat@shing-plugins
 ```
+
+The trailing `/` on `./` matters. `claude plugin marketplace add .` returns `Invalid marketplace source format` on Claude Code 2.1.152+.
 
 For a one-session smoke test without installing, run:
 
@@ -43,24 +45,26 @@ No Salesforce auth is required to install or run the local HTML demo.
 
 ## Try it in 30 seconds
 
-Bring a Figma file (or a PNG export) and run:
+The bundled fixture at `fixtures/example-figma/` is the fastest way to see the full flow. It ships a 1200×620 PNG of a fictional 3-card retail product row plus the Brand Summary the extractor should return. From the plugin repo root, in a Claude Code session with the plugin installed:
 
 ```
 claude
-> I have a Figma design I want in an Agentforce chat card
+> I have a Figma export I want in an Agentforce chat card. Use fixtures/example-figma/product-card.png
 ```
 
-The skill triggers, asks for a Figma source, extracts the Brand Summary via the `figma-extractor` agent, then writes `<component>.preview.html` for you to open in a browser. Once you approve the preview, it transforms into an LWC bundle and walks the 5-piece contract.
+The skill triggers, picks up the PNG path from your message, and runs the `figma-extractor` agent via Path C (image). Compare its output against `fixtures/example-figma/expected-brand-summary.json`. Then the skill writes `<component>.preview.html` at Step 3 for you to open in a browser and approve. YES advances to Step 4 (LWC transform) and the 5-piece contract.
 
-The compatibility shortcut is also namespaced when installed as a plugin:
+Steps 1–4 need no Salesforce org. Step 11 (deploy) is where org auth kicks in, and the skill only previews the deploy commands. You run them.
+
+**Bringing your own Figma?** Same entry point, paste a Figma URL or a local PNG path instead of the fixture path.
+
+**Namespaced slash command** (also works):
 
 ```
 /lwc-to-agentforce-chat:lwc-in-chat
 ```
 
-The slash command drops you straight into the Step 1 prompt for a Figma source.
-
-**No Figma handy?** The bundled `fixtures/example-html/product-card.html` shows what the HTML → LWC transform produces (before/after). It's a reference for what to expect after Step 4, not a runnable entry point.
+Drops you straight into the Step 1 prompt for a Figma source.
 
 ## What's inside
 
@@ -83,7 +87,7 @@ lwc-to-agentforce-chat/
 │   ├── hooks.json                  ← PreToolUse hook registration
 │   └── verify-image-urls.sh        ← blocks sf project deploy on 4xx/5xx image URLs
 └── fixtures/
-    └── example-html/       ← HTML→LWC before/after reference for Step 4; not an entry point
+    └── example-figma/      ← 30-second demo fixture: fictional 3-card PNG + expected Brand Summary
 ```
 
 ## Guardrails
@@ -101,8 +105,9 @@ The plugin ships with Figma's official remote MCP (`https://mcp.figma.com/mcp`) 
 **Prerequisites:**
 
 - Figma account (any tier).
-- Figma desktop app installed and running. The remote MCP reads the file through your local Figma app, not the web editor.
-- The target file open in the Figma desktop app during extraction.
+- The Figma file must be accessible by the account you authenticate with. Public share URLs work for anyone; private files require you to be a collaborator.
+
+The remote MCP at `mcp.figma.com` is link-based. It does not require the Figma desktop app. The desktop-app requirement applies to Figma's separate *local* MCP server, which this plugin does not ship. Some newer Figma features (Dev Mode selections, "Copy link to selection") are more convenient from the desktop app, but they are not prerequisites.
 
 **Auth flow:**
 
@@ -114,10 +119,9 @@ The plugin ships with Figma's official remote MCP (`https://mcp.figma.com/mcp`) 
 
 **Using it during the walkthrough:**
 
-1. Open the file in the Figma desktop app. Select the frame you want to convert.
-2. Right-click → **Copy link to selection**. The URL contains `?node-id=X-Y`.
-3. Paste that URL when the skill asks for a Figma source at Step 1.
-4. The `figma-extractor` agent picks Path A (MCP) automatically and returns a Brand Summary plus pattern inference.
+1. Grab a share link for the frame you want to convert. Easiest routes: right-click the frame in the desktop app and choose **Copy link to selection**, or use the Share button in the web app. Either yields a URL with a `?node-id=X-Y` fragment.
+2. Paste that URL when the skill asks for a Figma source at Step 1.
+3. The `figma-extractor` agent picks Path A (MCP) automatically and returns a Brand Summary plus pattern inference.
 
 If the MCP is unavailable in the session (unauthenticated, disconnected, or removed), the skill falls back to Path B (WebFetch on a public share URL) or Path C (a PNG export you paste in). Path B does **not** work on `figma.com/design/…?m=dev` editor URLs — those are canvas SPAs. Use Path A (authenticated MCP) or Path C (screenshot) for editor URLs.
 
@@ -178,7 +182,7 @@ Two common causes:
 
 **Deploy step says the Salesforce CLI isn't available.**
 
-The plugin never runs `sf` commands autonomously. It previews the deploy command and asks you to run it yourself. If you don't have `sf` installed, follow the [Salesforce CLI install guide](https://developer.salesforce.com/tools/salesforcecli). The plugin's demo path (`fixtures/example-html/`) works without `sf`.
+The plugin never runs `sf` commands autonomously. It previews the deploy command and asks you to run it yourself. If you don't have `sf` installed, follow the [Salesforce CLI install guide](https://developer.salesforce.com/tools/salesforcecli). The plugin's 30-second demo path (`fixtures/example-figma/`) works entirely offline, without `sf`.
 
 **`sf project deploy` is being blocked with an "Image URL verification failed" message.**
 
