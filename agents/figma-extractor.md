@@ -6,9 +6,10 @@ description: >
   lwc-to-agentforce-chat skill. Isolates raw MCP node trees and WebFetch HTML
   payloads in a scoped context so they don't bloat the parent conversation.
 
-  TRIGGER when: the parent skill reaches Step 2 (extract design tokens from
-  Figma) and the source is a URL >100KB rendered size, a PNG >2MB, or an MCP
-  fetch returning >500 node objects.
+  TRIGGER when: the parent lwc-to-agentforce-chat skill reaches Step 2 and
+  needs to extract design tokens from a Figma URL, PNG/JPG export, or MCP node
+  ID. Always delegate Step 2 here, including for the bundled demo fixture, so
+  extraction behavior is consistent and isolated from the guided workflow.
 
   DO NOT TRIGGER when: the source is a simple manual brand description (skip
   extraction entirely); the parent already has a Brand Summary from an earlier

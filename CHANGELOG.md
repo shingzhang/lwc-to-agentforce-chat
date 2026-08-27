@@ -2,6 +2,21 @@
 
 All notable changes to `lwc-to-agentforce-chat` will be documented here. The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.3] — 2026-08-26 · Submission readiness
+
+### Fixed
+
+- Made Step 2 delegation unconditional for Figma URLs, image exports, MCP node IDs, and the bundled demo fixture so the documented demo reliably exercises the `figma-extractor` agent.
+- Removed a machine-local archive path and a stale `CLAUDE.md` reference from the public README.
+- Corrected Figma remote-MCP and deploy-hook descriptions, including the source directory the hook actually scans.
+- Corrected the troubleshooting example to use `claude plugin marketplace add ./` consistently.
+
+### Changed
+
+- Tightened the customer-facing build-your-own guide and added concrete manifest, frontmatter, fixture, validation, and README guidance.
+- Added the required three-sentence “With more time” scope note.
+- Bumped plugin, marketplace, and skill versions to `0.4.3`.
+
 ## [0.4.2] — 2026-08-26 · Review feedback: install command, fixture, drift cleanup
 
 Addresses a review that ran the plugin end-to-end and found the shipped repo contradicting itself in several places (single-flow skill next to four-entry references), a broken install command, and a fixture that couldn't exercise the current skill.

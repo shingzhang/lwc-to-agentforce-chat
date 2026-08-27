@@ -1,95 +1,66 @@
 # Before You Build a Claude Code Plugin, Build the Workflow
 
-*Version 2 — a one-page guide for frontend developers*
+*A one-page guide for enterprise frontend developers*
 
-A good plugin usually starts as a conversation you are tired of repeating.
+A useful plugin usually starts as a conversation your team is tired of repeating. Prove the workflow with Claude first; package it only after you know where human judgment matters.
 
-To see how, build something deliberately playful:
+Use a deliberately playful first project:
 
-> Create a space-themed website prototype for configuring a peanut-butter-and-jelly sandwich. Put the options on the left and a visual preview on the right. Let the user choose the bread, jam, crust, and diagonal or vertical cut, and view the sandwich from different angles.
+> Create a space-themed website prototype for configuring a peanut-butter-and-jelly sandwich. Put controls on the left and a live preview on the right. Support bread, jam, crust, cut direction, viewing angles, mobile layouts, and keyboard users.
 
-This sounds silly. Underneath the space theme, it is a real frontend problem: several controls update shared state, combinations need rules, the preview must stay synchronized, and the experience must work on different screens and for keyboard users.
+The theme is silly, but the work is recognizable: controls share state, combinations have rules, assets need verification, and the interface must remain responsive and accessible.
 
-## Step 1: Build it with Claude before you automate it
+## 1. Complete one real run
 
-Give Claude the prompt and review version one. You will probably find decisions the prompt did not contain:
+Give Claude the prompt and review version one. Correct missing decisions: when the preview updates, which combinations are incompatible, how the layout collapses on a phone, and how a keyboard user operates it. Require Claude to verify assets instead of inventing URLs.
 
-- Should the preview update immediately?
-- Does changing the cut update every angle?
-- What happens when the crust is removed?
-- Which combinations are incompatible?
-- Where does the preview move on a phone?
-- Are the controls labeled for a screen reader?
+Keep iterating until the prototype behaves correctly. These corrections are not wasted turns; they are the raw material for the reusable workflow.
 
-Go back and forth until the prototype behaves the way you want. Tell Claude when it guesses incorrectly. Ask it to verify assets instead of inventing image URLs. The corrections are not wasted turns; they are the raw material for the reusable workflow.
-
-## Step 2: Extract what the successful run taught you
-
-When the prototype is working, ask:
-
-> Review our run. List the repeated instructions, my corrections, the decisions you had to make, the edge cases we found, and the definition of done. Show me the list before updating or creating anything.
-
-For the sandwich configurator, the lessons might be:
-
-- Keep configuration in one state object.
-- Render every preview angle from that same state.
-- Define incompatible combinations instead of handling them ad hoc.
-- Update the preview immediately after a selection.
-- Use accessible controls and a responsive narrow-screen layout.
-- Verify visual assets and their content; never invent URLs.
-
-Review the list. Claude can learn the wrong lesson from a successful run. Correct it before saving anything.
-
-## Step 3: Turn the pattern into a skill
-
-Do not create a skill called “make a PB&J website.” That would memorize the example.
+## 2. Extract the reusable judgment
 
 Ask Claude:
 
-> Turn the approved lessons into a skill for building interactive product-configurator prototypes. The skill should collect the product, options, compatibility rules, preview states, viewing angles, visual theme, responsive behavior, and accessibility requirements. Include clear success and failure states.
+> Review our run. List my repeated instructions, corrections, decisions, edge cases, and definition of done. Show me the list before creating or updating anything.
 
-The **skill** is the reusable playbook. It replaces the repeated prompts and corrections from the original conversation.
+Review that list yourself. Claude can learn the wrong lesson from a successful result. For this example, the durable rules might be: keep configuration in one state object, render every angle from it, define incompatibilities explicitly, update immediately, preserve accessibility on narrow screens, and verify every visual asset.
 
-Now test it on something different, such as a custom sneaker configurator with colors, materials, sizes, availability rules, and viewing angles. If the skill works for both sandwiches and sneakers, you captured a frontend pattern rather than one page.
+## 3. Turn the pattern into a skill
 
-When it fails, repeat the loop: finish the run, extract the new lessons, review them, and fold them back into the skill.
+Ask Claude to turn the approved rules into a skill for *interactive product configurators*, not a skill for making one PB&J page. The skill should collect the product, options, compatibility rules, preview states, theme, responsive behavior, accessibility requirements, and success and failure states.
 
-## Step 4: Decide whether it needs a plugin
+Test it on a different example, such as a sneaker configurator. If it works for both sandwiches and sneakers, you captured a workflow rather than memorizing a demo. Fold any new corrections back into the skill.
 
-A skill may be enough. Package it as a **plugin** when teammates need an installable capability with additional parts:
+## 4. Package only what the workflow needs
 
-- Add a **custom agent** when one focused job benefits from separate context—for example, scanning a large component library and returning the components the configurator should reuse.
-- Add **MCP or REST** when Claude needs external context or actions—for example, retrieving the design and variables from Figma.
-- Add a **hook** when an event must automatically trigger a check, block, record, or action—for example, running accessibility validation after component files change.
+A skill may be enough. Build a plugin when teammates need an installable capability with additional parts:
 
-Every addition should solve a named problem. Reading files does not automatically require an agent. Pasted input may be enough without MCP. A hook is unnecessary if the workflow never reaches the event it guards.
+- Add an **agent** when one focused job benefits from separate context, such as scanning a large component library and returning a compact shortlist.
+- Add **MCP** when the workflow needs external context, such as Figma components and variables.
+- Add a **hook** when an event must automatically check or block something, such as accessibility validation after component changes.
 
-The package might look like:
+Every part should solve a named problem. A minimal package might be:
 
 ```text
 product-configurator-plugin/
 ├── .claude-plugin/plugin.json
 ├── skills/product-configurator/SKILL.md
 ├── agents/component-library-scanner.md
-├── .mcp.json
-├── fixtures/pbj/                 # first example
-├── fixtures/sneaker/             # proves it generalizes
+├── fixtures/pbj/
+├── fixtures/sneaker/
 └── README.md
 ```
 
-## Step 5: Have another developer prove it works
+Give the manifest a unique kebab-case `name`. Give the skill and agent clear frontmatter that says when they should and should not run. Inspect every generated instruction; remove generic features you cannot connect to a real failure or user need.
 
-From a fresh clone, run:
+## 5. Let another developer prove it
+
+From a fresh clone, have a teammate run:
 
 ```bash
 claude plugin validate .
 claude --plugin-dir .
 ```
 
-Follow the README literally. A new developer should understand who the plugin serves, run a fictional example without customer credentials, and recognize the expected result in under five minutes.
+Then have them follow the README literally. It should name the persona and problem, explain installation, and provide a fictional example with a recognizable result in under five minutes and without customer credentials.
 
 If success still depends on your memory, an undocumented correction, or a lucky conversation, the plugin is not finished.
-
-## TLDR
-
-Build the example. Learn through iteration. Save the reusable behavior as a skill. Package it as a plugin only when the complete capability is worth installing and sharing.

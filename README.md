@@ -2,7 +2,7 @@
 
 Turn a Figma design into a Lightning Web Component that renders inside an Agentforce chat bubble. The mandatory HTML preview step in the middle lets you review the design in a browser before it becomes LWC.
 
-`v0.4.2` · `experimental` · `Salesforce` · `Agentforce` · `LWC`
+`v0.4.3` · `experimental` · `Salesforce` · `Agentforce` · `LWC`
 
 ---
 
@@ -15,12 +15,10 @@ Turn a Figma design into a Lightning Web Component that renders inside an Agentf
 
 - **One linear flow with a design-review moment.** Figma → HTML preview (open in your browser and eyeball it) → LWC bundle → 5-piece contract (Apex DTO + LightningType bundle + LWC bundle + Invocable Apex + Agent Script).
 - **The HTML preview step is non-skippable.** LWC has no mid-build browser preview. The intermediary HTML catches misread Figma tokens *before* the transform + write cycle burns time on LWC files you'll have to redo.
-- **Reads Figma through the official MCP.** The plugin registers `mcp.figma.com` as an MCP server. Once you authenticate through `/mcp`, the `figma-extractor` agent pulls structured design tokens (colors, typography, spacing, node structure) straight from the file open in your Figma desktop app. PNG export and public share URL are fallbacks.
+- **Reads Figma through the official MCP.** The plugin registers the link-based remote server at `mcp.figma.com`. Once you authenticate through `/mcp`, the `figma-extractor` agent pulls structured design tokens (colors, typography, spacing, node structure) from a Figma share link. PNG export is the offline fallback; the Figma desktop app is optional.
 - **Teaches at every step.** Every question is labeled `Step N of ~M — <topic>`. Every substantive action prints a `What / Why / Next` micro-block grounded in a specific LWC constraint or known failure mode.
 - **Never writes to `force-app/` or runs `sf project deploy` without explicit YES.** Load-bearing checkpoints are non-negotiable — planning, implementation, and demo are 100% local until you type YES.
-- **Blocks `sf project deploy` when image URLs in Apex classes 404.** A PreToolUse hook (`hooks/verify-image-urls.sh`) scans staged `*.cls` files for `.jpg` / `.png` / `.gif` / `.webp` / `.svg` URLs before every deploy and fails the command with a fix path if any return 4xx/5xx. Prevents Failure Mode #8 (broken images render as blank slots in the chat card) from reaching a running org.
-
-> **Earlier multi-entry version** (Figma / HTML / existing LWC / scan-my-folder) is archived at `~/Documents/claude/plugin homework/lwc-to-agentforce-chat-multi-entry/` for reference.
+- **Blocks `sf project deploy` when image URLs in Apex classes 404.** A PreToolUse hook (`hooks/verify-image-urls.sh`) scans `*.cls` files in the selected source directory for `.jpg` / `.png` / `.gif` / `.webp` / `.svg` URLs before every deploy and fails the command with a fix path if any return 4xx/5xx. Prevents Failure Mode #8 (broken images render as blank slots in the chat card) from reaching a running org.
 
 ## Install (fresh clone, <5 min)
 
@@ -141,7 +139,7 @@ The check for Figma MCP availability looks at tools in the current session, not 
 
 **`claude plugin install .` says "not found in any configured marketplace."**
 
-`claude plugin install <path>` doesn't accept a path directly. Use the two-step flow: `claude plugin marketplace add .` first, then `claude plugin install lwc-to-agentforce-chat@shing-plugins`.
+`claude plugin install <path>` doesn't accept a path directly. Use the two-step flow: `claude plugin marketplace add ./` first, then `claude plugin install lwc-to-agentforce-chat@shing-plugins`.
 
 **I moved the plugin folder and the install broke.**
 
@@ -167,7 +165,7 @@ Two valid answers:
 
 **The skill previews a URL and asks for YES before every fetch.**
 
-By design. This is a load-bearing checkpoint per the plugin's CLAUDE.md principle #4. Some Figma URLs contain view tokens or session identifiers; the preview lets you confirm before the URL enters WebFetch logs. Reply `YES` to proceed, `N` to switch to a screenshot, or paste a different URL.
+By design. This is one of the skill's load-bearing checkpoints. Some Figma URLs contain view tokens or session identifiers; the preview lets you confirm before the URL enters WebFetch logs. Reply `YES` to proceed, `N` to switch to a screenshot, or paste a different URL.
 
 **The skill doesn't trigger when I paste a Figma URL.**
 
@@ -186,7 +184,11 @@ The plugin never runs `sf` commands autonomously. It previews the deploy command
 
 **`sf project deploy` is being blocked with an "Image URL verification failed" message.**
 
-The PreToolUse hook at `hooks/verify-image-urls.sh` scanned your staged `*.cls` files, found a `.jpg` / `.png` / `.gif` / `.webp` / `.svg` URL, and curl returned a 4xx or 5xx status on it. This is intentional — Failure Mode #8 (broken images render as blank slots in the chat card) is one of the most common ways an in-chat LWC ships silently broken. Follow the three-step fix path printed on stderr: attempt WebFetch on any brand URL the user has already mentioned, ask the user for verified URLs if that fails, then curl each new URL to 200 before retrying the deploy. Non-image URLs (product page links, docs) are not checked. To bypass in an offline run: the hook already exits 0 on curl network errors (status `000`), so genuine offline deploys aren't blocked.
+The PreToolUse hook at `hooks/verify-image-urls.sh` scanned `*.cls` files in the selected source directory, found a `.jpg` / `.png` / `.gif` / `.webp` / `.svg` URL, and curl returned a 4xx or 5xx status on it. This is intentional — Failure Mode #8 (broken images render as blank slots in the chat card) is one of the most common ways an in-chat LWC ships silently broken. Follow the three-step fix path printed on stderr: attempt WebFetch on any brand URL the user has already mentioned, ask the user for verified URLs if that fails, then curl each new URL to 200 before retrying the deploy. Non-image URLs (product page links, docs) are not checked. In an offline run, the hook exits 0 on curl network errors (status `000`) so a network outage does not block a deploy.
+
+## With more time
+
+I would add fixture-driven checks for the generated metadata contract and run the complete workflow against a second enterprise design system to expose assumptions hidden by the retail example. I would also restore HTML and existing-LWC entry paths only after user testing shows that the additional flexibility is worth the larger decision surface. Those extensions would improve confidence and reach without weakening the plugin's intentionally narrow first-run experience.
 
 ## Uninstall
 

@@ -21,7 +21,7 @@ description: >
 license: MIT
 experimental: true
 metadata:
-  version: "0.4.2"
+  version: "0.4.3"
   last_updated: "2026-08-26"
 allowed-tools:
   - Bash
@@ -59,7 +59,7 @@ The skill's core promise is **guiding + teaching + a real design-review moment**
 - **The HTML preview step (Step 3) is mandatory and non-skippable.** The user reviews the intermediary HTML in a browser (or as rendered markup) before any LWC transform runs.
 - Standing options unlock progressively (see "Standing options" below). The opening prompt shows no `C/S/R/V/E` block. From Step 2 onward, print a short footer listing only options that are actionable at that point. `?` is always in the footer once anything is unlocked.
 - If the user provides a Figma URL / PNG / file path up front, **infer aggressively** and skip the opening prompt.
-- **Try WebFetch on any brand or product URL the user has already mentioned before asking them for image URLs directly.** Verify what you get: URL returns HTTP 200, and image content matches its label — download one sample and Read it before wiring the rest. Ask the user for URLs only after WebFetch fails or returns nothing usable. Fabricated URLs 404 silently through the LWC's image error handler (Failure Mode #8), so verify before you deploy. A PreToolUse hook (`hooks/verify-image-urls.sh`) enforces this at deploy time: it scans staged `*.cls` files for `.jpg` / `.png` / `.gif` / `.webp` / `.svg` URLs and blocks `sf project deploy` if any return 4xx/5xx. Fix the URLs in-file, don't attempt to bypass the hook.
+- **Try WebFetch on any brand or product URL the user has already mentioned before asking them for image URLs directly.** Verify what you get: URL returns HTTP 200, and image content matches its label — download one sample and Read it before wiring the rest. Ask the user for URLs only after WebFetch fails or returns nothing usable. Fabricated URLs 404 silently through the LWC's image error handler (Failure Mode #8), so verify before you deploy. A PreToolUse hook (`hooks/verify-image-urls.sh`) enforces this at deploy time: it scans `*.cls` files in the selected source directory for `.jpg` / `.png` / `.gif` / `.webp` / `.svg` URLs and blocks `sf project deploy` if any return 4xx/5xx. Fix the URLs in-file, don't attempt to bypass the hook.
 - **When a mechanism isn't working (image rendering, agent typing, Trusted URL config, targetConfigs binding, `agent_type` errors), retrieve a known-good reference from the same org and diff before inventing a fix.** `sf project retrieve start -m AiAuthoringBundle:<working-name>` — or the equivalent for `LightningComponentBundle` / `ApexClass` / `LightningTypeBundle`. Reference agents in the same org are the ground truth for what works there; cheaper than debugging blind.
 - When an SFDX project is present, the state canvas at `<project>/LWC_BUILD_STATE.md` is the source of truth. In local preview mode, keep the same state in chat and do not create files.
 - Convert relative dates in the user's messages to absolute dates when writing to the state canvas.
@@ -281,7 +281,7 @@ If the user pastes source material with their first message, **skip the prompt**
 
 ## Step 2 — Extract the Brand Summary
 
-**Consults §B Phase 1.** Hands off to the `figma-extractor` subagent.
+**Consults §B Phase 1.** Always hand off extraction to the `figma-extractor` subagent, including for the bundled PNG fixture. The subagent owns source routing and returns only the compact Brand Summary; the parent owns every later step.
 
 Detection order (see `references/figma-extraction.md` for the full logic):
 
