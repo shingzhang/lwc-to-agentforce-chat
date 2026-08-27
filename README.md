@@ -58,6 +58,24 @@ Steps 1–4 need no Salesforce org. Step 13 is the validate/deploy checkpoint. T
 
 **Bringing your own Figma?** Same entry point, paste a Figma URL or a local PNG path instead of the fixture path.
 
+## Optional: create a free Salesforce test org
+
+The PNG extraction, Brand Summary, and HTML review in Steps 1–4 do not need a Salesforce org. To validate and deploy the generated metadata in Steps 11–13, use a non-production org with Agentforce enabled.
+
+1. Sign up for the free [Developer Edition with Agentforce and Data 360](https://www.salesforce.com/products/free-trial/developer/?d=pb). A generic Developer Edition might not include the Agentforce features this workflow needs.
+2. Verify the account from the Salesforce welcome email, set the password, and log in as the system administrator.
+3. In Setup, open **Einstein Setup** and turn on Einstein. Then open **Agentforce Agents** and enable Agentforce. This plugin does not require Data 360, so you can skip Data 360 activation.
+4. Install the [Salesforce CLI](https://developer.salesforce.com/tools/salesforcecli), then authorize the new org from a terminal:
+
+   ```bash
+   sf org login web --alias agentforce-demo --set-default
+   sf org display --target-org agentforce-demo
+   ```
+
+5. Continue the plugin walkthrough with `agentforce-demo` as the target-org alias. Keep deployment scoped to the generated metadata and do not use a production org.
+
+Org signup, email verification, and feature enablement can take longer than five minutes. They are deliberately optional and are not part of the README's under-five-minute local demo. Salesforce documents the current environment choices and enablement steps in [Set Up Your Development Environment for Agentforce DX](https://developer.salesforce.com/docs/ai/agentforce/guide/agent-dx-set-up-env.html).
+
 **Namespaced slash command** (also works):
 
 ```
