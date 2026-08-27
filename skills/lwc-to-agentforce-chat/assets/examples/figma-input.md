@@ -27,13 +27,13 @@ opening prompt and goes straight to Step 2 (extraction):
 ```
 ✓ Figma URL captured. State canvas created at LWC_BUILD_STATE.md.
 
-Step 2 of ~11 — Fetching the Figma frame. Preview URL:
+Step 2 of ~13 — May I send this exact Figma URL to WebFetch?
   <the-URL-you-pasted>
   Reply YES to proceed.
 
 [user: YES]
 
-✓ Step 2 of ~11 — Extracted brand tokens from Figma.
+✓ Step 2 of ~13 — Extracted brand tokens from Figma.
 
   What: Pulled primary <#RRGGBB>, secondary <#RRGGBB>, accent <#RRGGBB>,
         font <family>, radius <N>px, shadow <css-shadow>
@@ -45,7 +45,6 @@ Step 2 of ~11 — Fetching the Figma frame. Preview URL:
   Next: Step 3 — I'll generate a full HTML preview of the card so you
         can review it in a browser before we transform to LWC.
 
-? · C=state
 ```
 
 ## Brand Summary produced
@@ -78,10 +77,12 @@ Pattern:    shopping_carousel (high confidence)
 | LightningType folder | `<Prefix>_ShoppingCarousel` |
 | Apex DTO class | `<Prefix>ShoppingCarouselData` |
 | Invocable service | `<Prefix>ShoppingCarouselService` |
-| Agent Script action | `show_carousel` |
+| GenAI Function | `<Prefix>_Shopping_Carousel` |
+| Agent bundle | `<Prefix>ShoppingAgent` |
+| Permission set | `<Prefix>_Shopping_Carousel_Access` |
 
-From here the skill walks Steps 3–11 (HTML preview + review → LWC transform
-→ naming → preview Piece 1 → preview Piece 2 → ... → deploy checkpoint)
+From here the skill walks Steps 3–13 (HTML preview + review → LWC transform
+→ naming → complete metadata generation → validate/dry-run/deploy)
 with a What/Why/Next block after each write. The HTML preview at Step 3 is
 mandatory and non-skippable; the skill does not generate the LWC bundle
 until the user replies YES to the preview.

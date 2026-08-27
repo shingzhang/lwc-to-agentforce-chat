@@ -2,23 +2,23 @@
 
 Turn a Figma design into a Lightning Web Component that renders inside an Agentforce chat bubble. The mandatory HTML preview step in the middle lets you review the design in a browser before it becomes LWC.
 
-`v0.4.3` · `experimental` · `Salesforce` · `Agentforce` · `LWC`
+`v0.5.0` · `experimental` · `Salesforce` · `Agentforce` · `LWC`
 
 ---
 
 ## Who this is for
 
-- A Salesforce front-end developer at an enterprise customer who owns Agentforce in-chat experiences. Common in retail (product carousels), financial services (account cards), and service industries (appointment booking, order status).
-- They already have a Figma design. The expensive part is wiring it into the five metadata pieces the chat renderer expects.
+- A Salesforce front-end developer at a large retailer who owns Agentforce product-card experiences in chat.
+- They already have an approved Figma design. The expensive part is wiring it through Apex, a Lightning Type, an LWC renderer, a GenAI Function, Agent Script, and the bot user's permissions without losing the design intent.
 
 ## What it does
 
-- **One linear flow with a design-review moment.** Figma → HTML preview (open in your browser and eyeball it) → LWC bundle → 5-piece contract (Apex DTO + LightningType bundle + LWC bundle + Invocable Apex + Agent Script).
+- **One linear flow with a design-review moment.** Figma → HTML preview (open it in a browser and eyeball it) → LWC bundle → complete Agentforce metadata (Apex DTO + Lightning Type + LWC renderer + Invocable Apex + GenAI Function + generated Agent Script bundle + permission set).
 - **The HTML preview step is non-skippable.** LWC has no mid-build browser preview. The intermediary HTML catches misread Figma tokens *before* the transform + write cycle burns time on LWC files you'll have to redo.
 - **Reads Figma through the official MCP.** The plugin registers the link-based remote server at `mcp.figma.com`. Once you authenticate through `/mcp`, the `figma-extractor` agent pulls structured design tokens (colors, typography, spacing, node structure) from a Figma share link. PNG export is the offline fallback; the Figma desktop app is optional.
 - **Teaches at every step.** Every question is labeled `Step N of ~M — <topic>`. Every substantive action prints a `What / Why / Next` micro-block grounded in a specific LWC constraint or known failure mode.
 - **Never writes to `force-app/` or runs `sf project deploy` without explicit YES.** Load-bearing checkpoints are non-negotiable — planning, implementation, and demo are 100% local until you type YES.
-- **Blocks `sf project deploy` when image URLs in Apex classes 404.** A PreToolUse hook (`hooks/verify-image-urls.sh`) scans `*.cls` files in the selected source directory for `.jpg` / `.png` / `.gif` / `.webp` / `.svg` URLs before every deploy and fails the command with a fix path if any return 4xx/5xx. Prevents Failure Mode #8 (broken images render as blank slots in the chat card) from reaching a running org.
+- **Blocks Claude-initiated `sf project deploy` commands when image URLs in Apex classes 404.** A PreToolUse hook (`hooks/verify-image-urls.sh`) scans scoped `*.cls` files and fails the command with a fix path if image URLs return 4xx/5xx. Commands typed manually in another terminal do not pass through this hook.
 
 ## Install (fresh clone, <5 min)
 
@@ -45,14 +45,16 @@ No Salesforce auth is required to install or run the local HTML demo.
 
 The bundled fixture at `fixtures/example-figma/` is the fastest way to see the full flow. It ships a 1200×620 PNG of a fictional 3-card retail product row plus the Brand Summary the extractor should return. From the plugin repo root, in a Claude Code session with the plugin installed:
 
+![Bundled fictional retail product-card fixture](fixtures/example-figma/product-card.png)
+
 ```
 claude
 > I have a Figma export I want in an Agentforce chat card. Use fixtures/example-figma/product-card.png
 ```
 
-The skill triggers, picks up the PNG path from your message, and runs the `figma-extractor` agent via Path C (image). Compare its output against `fixtures/example-figma/expected-brand-summary.json`. Then the skill writes `<component>.preview.html` at Step 3 for you to open in a browser and approve. YES advances to Step 4 (LWC transform) and the 5-piece contract.
+The skill triggers, picks up the PNG path from your message, and runs the `figma-extractor` agent via Path C (image). Compare its output against `fixtures/example-figma/expected-brand-summary.json`. Then the skill writes `<component>.preview.html` at Step 3 for you to open in a browser and approve. YES advances to Step 4 (LWC transform) and the complete metadata workflow.
 
-Steps 1–4 need no Salesforce org. Step 11 (deploy) is where org auth kicks in, and the skill only previews the deploy commands. You run them.
+Steps 1–4 need no Salesforce org. Step 13 is the validate/deploy checkpoint. The skill previews the exact scoped commands and requires a separate YES for validation, dry-run, real deploy, publish/activate, and bot-user permission assignment.
 
 **Bringing your own Figma?** Same entry point, paste a Figma URL or a local PNG path instead of the fixture path.
 
@@ -90,9 +92,9 @@ lwc-to-agentforce-chat/
 
 ## Guardrails
 
-- **No writes to any Salesforce sandbox.** Planning, implementation, and demo are 100% local.
+- **No Salesforce org changes without explicit approval.** PNG extraction, HTML review, and local source generation can be completed before deployment.
 - **Every file write under `force-app/` requires explicit YES.** Load-bearing checkpoint — no exceptions.
-- **Every `sf project deploy` command is your next step, not the skill's.** The skill previews commands and prints them; you run them.
+- **Every Salesforce operation requires its own explicit YES.** If you ask Claude to run an approved deploy, the image-validation hook protects that Bash call. A command you copy into another terminal is outside the hook's reach.
 - **Figma URL fetches preview the URL before hitting `WebFetch`.** Share URLs can contain tokens — you confirm before it enters WebFetch logs.
 - **Fictional or user-supplied inputs only.** The bundled fixture uses invented names and generic HTML. No real customer names, URLs, or brand tokens ship in this repo. The skill runs against whatever Figma URL you paste in.
 
@@ -180,11 +182,18 @@ Two common causes:
 
 **Deploy step says the Salesforce CLI isn't available.**
 
-The plugin never runs `sf` commands autonomously. It previews the deploy command and asks you to run it yourself. If you don't have `sf` installed, follow the [Salesforce CLI install guide](https://developer.salesforce.com/tools/salesforcecli). The plugin's 30-second demo path (`fixtures/example-figma/`) works entirely offline, without `sf`.
+The plugin never runs `sf` commands without a dedicated approval. If you don't have `sf` installed, follow the [Salesforce CLI install guide](https://developer.salesforce.com/tools/salesforcecli). The PNG extraction and HTML-preview portion works without `sf`.
 
 **`sf project deploy` is being blocked with an "Image URL verification failed" message.**
 
-The PreToolUse hook at `hooks/verify-image-urls.sh` scanned `*.cls` files in the selected source directory, found a `.jpg` / `.png` / `.gif` / `.webp` / `.svg` URL, and curl returned a 4xx or 5xx status on it. This is intentional — Failure Mode #8 (broken images render as blank slots in the chat card) is one of the most common ways an in-chat LWC ships silently broken. Follow the three-step fix path printed on stderr: attempt WebFetch on any brand URL the user has already mentioned, ask the user for verified URLs if that fails, then curl each new URL to 200 before retrying the deploy. Non-image URLs (product page links, docs) are not checked. In an offline run, the hook exits 0 on curl network errors (status `000`) so a network outage does not block a deploy.
+The PreToolUse hook at `hooks/verify-image-urls.sh` scanned `*.cls` files in the selected source directory, found a `.jpg` / `.png` / `.gif` / `.webp` / `.svg` URL, and curl returned a 4xx or 5xx status on it. This is intentional — broken images render as blank slots in the chat card. Follow the fix path printed on stderr and retry after each URL returns 200. Non-image URLs are not checked, and network status `000` does not block a deploy. The hook only runs when Claude invokes the Bash tool; it cannot inspect a command entered manually elsewhere.
+
+## Submission artifacts
+
+- [Build-your-own-plugin guide](GUIDE.md)
+- [Recorded walkthrough (Canva)](https://www.canva.com/design/DAHTdM6AFak/TbmjdD7o53Yzsqzm0HsW5A/watch?utm_content=DAHTdM6AFak&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h89ebb04fb6)
+
+The Salesforce metadata templates are a reduced adaptation of the official [Agent Script Recipes Custom Lightning Types example](https://developer.salesforce.com/sample-apps/agent-script-recipes/action-configuration/custom-lightning-types).
 
 ## With more time
 

@@ -1,174 +1,47 @@
 # Changelog
 
-All notable changes to `lwc-to-agentforce-chat` will be documented here. The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+## 0.5.0 — 2026-08-27
 
-## [0.4.3] — 2026-08-26 · Submission readiness
+- Replaced the legacy metadata templates with a reduced adaptation of
+  Salesforce's current Custom Lightning Types recipe: Apex-bound
+  `schema.json`, `$` renderer override, object output,
+  `target: "apex://..."`, `filter_from_agent: False`, and GenAI Function
+  metadata.
+- The workflow now creates every artifact it deploys: a complete
+  CLI-generated AiAuthoringBundle, GenAI Function schemas, a permission set,
+  and conditional CSP metadata.
+- Added an explicit `webfetch_approved` handoff. The extractor returns
+  `WEBFETCH_APPROVAL_REQUIRED` instead of calling WebFetch without the
+  parent's approval for that exact URL.
+- Simplified progress to thirteen numbered steps, removed contradictory
+  letter-option unlocks, restored the large-retailer persona, and removed
+  local-only referrals.
+- Embedded the stable fictional PNG fixture in the README and clarified that
+  the hook protects Claude-initiated Bash deploys, not commands typed in
+  another terminal.
 
-### Fixed
+## 0.4.3 — 2026-08-26
 
-- Made Step 2 delegation unconditional for Figma URLs, image exports, MCP node IDs, and the bundled demo fixture so the documented demo reliably exercises the `figma-extractor` agent.
-- Removed a machine-local archive path and a stale `CLAUDE.md` reference from the public README.
-- Corrected Figma remote-MCP and deploy-hook descriptions, including the source directory the hook actually scans.
-- Corrected the troubleshooting example to use `claude plugin marketplace add ./` consistently.
+- Corrected fresh-clone marketplace instructions and aligned manifest versions.
+- Added explicit agent triggering for the bundled fixture and a concise
+  submission-readiness section.
+- Tightened the build-your-own-plugin guide around one worked example.
 
-### Changed
+## 0.4.2 — 2026-08-25
 
-- Tightened the customer-facing build-your-own guide and added concrete manifest, frontmatter, fixture, validation, and README guidance.
-- Added the required three-sentence “With more time” scope note.
-- Bumped plugin, marketplace, and skill versions to `0.4.3`.
+- Added the stable fictional 1200×620 retail PNG fixture and expected Brand
+  Summary.
+- Switched the Figma configuration to the official remote MCP endpoint.
+- Removed retired multi-entry files and made the active workflow self-contained.
+- Added strict validation and isolated-install smoke-test instructions.
 
-## [0.4.2] — 2026-08-26 · Review feedback: install command, fixture, drift cleanup
+## 0.4.0 — 2026-08-24
 
-Addresses a review that ran the plugin end-to-end and found the shipped repo contradicting itself in several places (single-flow skill next to four-entry references), a broken install command, and a fixture that couldn't exercise the current skill.
+- Added the `figma-extractor` agent, Figma MCP configuration, and image-URL
+  PreToolUse deploy guard.
+- Reduced the plugin to one Figma-first flow with a mandatory HTML review.
 
-### Fixed
+## 0.1.0 — 2026-08-22
 
-- **`README.md` install command.** `claude plugin marketplace add .` returns `Invalid marketplace source format` on Claude Code 2.1.152+. Corrected to `claude plugin marketplace add ./`, matching the local-marketplace docs.
-- **`README.md` clone command.** Replaced the `<this-repo>` placeholder with the real URL `https://github.com/shingzhang/lwc-to-agentforce-chat.git`.
-- **`README.md` Figma MCP prerequisites.** The prior text said the remote MCP required the Figma desktop app. The remote MCP at `mcp.figma.com` is link-based and does not require the desktop app. The desktop-app requirement applies to Figma's separate local MCP server, which this plugin does not ship. Text corrected.
-- **`CONTRIBUTING.md` principle #2** ("One entry point, one lane"). The prior wording still enumerated the four removed entry points (Figma / HTML / existing LWC / scan folder). Rewritten as "One flow, one lane" to match the single Figma-first reality shipped since v0.3.0.
-- **`CONTRIBUTING.md` principle #4** (load-bearing checkpoints). The prior wording said every `LWC_BUILD_STATE.md` overwrite requires explicit YES, which contradicted the skill's actual behavior of updating the canvas after every substantive turn. Aligned with the skill: auto-updates are expected, YES is required only when the user has hand-edited the file between turns.
-### Added
-
-- **`fixtures/example-figma/`** — a runnable 30-second demo fixture. Contains `product-card.png` (a 1200×620 fictional 3-card retail row, "Meadowbrook Market"), `expected-brand-summary.json` (the Brand Summary the extractor should return, including `shopping_carousel` pattern inference at high confidence), and a fixture README explaining how to use it. Replaces the prior HTML fixture, which could not exercise the current Figma-first flow.
-- **README "Try it in 30 seconds"** now points at the new fixture with the exact command a reviewer can copy-paste.
-
-### Changed
-
-- **`references/failure-mode-crosswalk.md`** — Rewrote the "Detected at" column of the full crosswalk table to cite current single-flow step numbers (Step 4 transform, Step 8 Piece 3, Step 10 Piece 5, Step 11 deploy, `V=verify org`) instead of `Entry N Step M`. Deleted the "Detection hooks per entry point" section, which duplicated SKILL.md §C. Replaced with a short "Proactive checks in the single flow" summary that cross-references SKILL.md §C.
-- **`references/teaching-blocks.md`** — Removed the "Switches from one entry point to another" trigger bullet. Replaced 6 stale canonical examples (Entry-labeled, `S=switch path` in every footer, inconsistent step counts) with 3 canonical examples (Step 4, Step 10, Step 11) that intentionally don't duplicate SKILL.md's own three examples.
-- **`references/progress-labels.md`** — Full rewrite. Removed the per-entry-point step-budget table. Replaced with the single ~11-step budget matching SKILL.md §C exactly and the C/V/E/R footer table.
-- **`references/figma-extraction.md`** — Retargeted the "When this reference applies" intro at SKILL.md Step 2 instead of "Entry point 1." Dropped paragraphs about Entries 2/3/4 and Entry 4 folder-scan handoff. Fixed a stale "Step 5's Brand Summary confirmation" reference to "Step 2's."
-- **`references/html-to-lwc-transforms.md`** — Rewrote the intro from "When Entry point 2 fires" to describe the real trigger: Step 4, after the Step 3 HTML preview is approved.
-- **`assets/examples/figma-input.md`** — Full rewrite. Dropped "Entry 1" from the title, removed the fictitious "Step 1 = path picker" framing, removed `S=switch path` footers, re-aligned all step numbers to the ~11-step flow. Aligned Invocable-service naming (`...Service` not `...Controller`) with SKILL.md §B Phase 5.
-- Bumped plugin, marketplace, and skill versions to `0.4.2`.
-
-### Removed
-
-- **`fixtures/example-html/`** — the HTML product-card fixture exercised the removed Entry 2 (HTML → LWC) path. The current skill refuses HTML-only input. Fully deleted.
-- **`references/entry-point-detection.md`** — dead code for the removed multi-entry scan. The v0.3.0 CHANGELOG kept it "in case the multi-entry version is ever restored." That branch is preserved as a sibling directory, so the file inside the shipped plugin is only confusing reviewers. Deleted.
-- **`assets/examples/html-input.html`** — Entry 2 exemplar. Deleted.
-- **`assets/examples/retrofit-input.md`** — Entry 3 exemplar. Deleted.
-- **`assets/templates/` directory** — was already empty. Directory removed.
-
-### Verified
-
-- Independent grep across the plugin (excluding `CHANGELOG.md`) returns zero hits for `Entry 1`/`Entry 2`/`Entry 3`/`Entry 4`, `S=switch`, `switch path`, or any of the five previously cited external skills (`experience-cloud-site-builder`, `building-agentforce-clt-widget`, `generating-lwc-components`, `applying-slds`, `fde-skills`).
-- Net line delta: **−338 lines** across the 18 changed files. Reference material now points at SKILL.md instead of restating it, which addresses the reviewer's "reads overbuilt" observation without dropping any capability.
-
-## [0.4.1] — 2026-08-26 · Field-tested hardening: hook + ground rules
-
-Two lessons from a full end-to-end run of the plugin against a customer-shaped build:
-
-- URLs invented by the model 404 silently in production because the LWC's image error handler (Failure Mode #8) hides broken images.
-- When a mechanism isn't working (image rendering, agent typing, Trusted URL config), inspecting a known-good reference in the same org is faster than debugging blind.
-
-### Added
-
-- **`hooks/verify-image-urls.sh`** — PreToolUse hook that fires on every Bash tool call, filters to `sf project deploy`, extracts `.jpg` / `.jpeg` / `.png` / `.gif` / `.webp` / `.svg` URLs from the staged `*.cls` files, and blocks the deploy (`exit 2`) if any return HTTP 4xx / 5xx. Prints a three-step fix path to stderr so the model can recover: try WebFetch on any brand URL the user has already mentioned; ask the user for verified URLs if that fails; curl each replacement to 200 before retrying. Skips 000 (network error) so genuine offline deploys aren't blocked. Non-image link values (product URLs, docs) are ignored to avoid false positives on redirects and dynamic pages.
-- **`hooks/hooks.json`** — hook registration for the plugin loader (`PreToolUse` × `Bash` matcher, `${CLAUDE_PLUGIN_ROOT}` command path).
-- **Two new Ground rules in `SKILL.md`.** (1) Try WebFetch on any brand or product URL the user already mentioned before asking for image URLs directly. Verify what you get (200 + Read a sample). (2) When a mechanism isn't working, `sf project retrieve start -m AiAuthoringBundle:<known-working-name>` and diff against a reference before inventing a fix.
-- **README `hooks/` entry** in the "What's inside" tree, a new guardrail line for the hook, and a troubleshooting entry explaining what to do when the deploy is blocked.
-
-### Changed
-
-- Bumped plugin, marketplace, and skill versions to `0.4.1`.
-
-## [0.4.0] — 2026-08-26 · Fully standalone
-
-### Changed
-
-- **Removed every external-skill dependency.** The plugin previously cited `experience-cloud-site-builder`, `building-agentforce-clt-widget`, `generating-lwc-components`, and `applying-slds` for deeper content — the 5-piece contract templates, the numbered failure-mode fixes, the deploy sequence, and the Figma manual fallback. A reviewer cloning this repo with none of those installed would hit dead references at exactly the moments the skill promises the most detail.
-- **`SKILL.md` §B Phase 5** now contains the full 5-piece contract inline: the Apex DTO template, all three LightningType bundle files (`schema.json`, `renderer.json`, `.lightningTypeBundle-meta.xml`), the Invocable Apex template, the Agent Script `.agent` action snippet with the two magic lines, the naming table, and the full `sf` deploy sequence in order.
-- **`references/failure-mode-crosswalk.md`** now has full symptom / cause / fix / verify write-ups for Failure Modes #7, #8, #9, #10, and #12 — the five this skill checks proactively — instead of pointing at an external §C. The `R=details` handler reads from this file directly.
-- **`references/figma-extraction.md`** now inlines the Manual fallback (ask for primary/accent color, logo, font directly when no Figma source is available) and a short note on mapping tokens to SLDS styling hooks, instead of citing an external skill for both.
-- **`references/entry-point-detection.md`** now inlines the ✓/⚠/✗ state-table shape and the org-side `sf data query` inventory checks directly, rather than delegating to two other skills for a scan this file already owns.
-- **`references/html-to-lwc-transforms.md` and `references/teaching-blocks.md`** — every `Failure Mode #N in <external skill>` citation became `Failure Mode #N`, pointing at this plugin's own crosswalk file.
-- **`CONTRIBUTING.md` principle #1** ("Defer, don't duplicate") — rewritten to "Keep the plugin self-contained," since the old principle actively argued against standalone operation.
-- Bumped plugin, marketplace, and skill versions to `0.4.0`.
-
-### Notes
-
-- The internal-referencing version of this plugin (the one that assumes those Salesforce skills are installed and defers to them for depth) is preserved as a sibling at `lwc-to-agentforce-chat-internal/`. That version is unchanged by this release.
-- The `experience-cloud-site-builder` skill has evolved since this plugin's citations were written — its current `SKILL.md` no longer contains the CLT/5-piece-contract material or the numbered-failure-mode catalog this plugin pointed at. The inlined templates and fixes above were written fresh for this plugin, grounded in the same Apex/LWC/Agent Script conventions and in the concrete detail already present elsewhere in this plugin's own files, rather than copied from content that no longer exists at the cited location.
-
-## [0.2.1] — 2026-08-25 · Submission hardening
-
-### Changed
-
-- Added a local marketplace manifest and corrected the fresh-clone install instructions.
-- Replaced placeholder stdio MCP entries with Figma's official remote MCP endpoint.
-- Allowed the read-only Figma agent to inherit MCP tools while continuing to deny `Write` and `Edit`.
-- Added a no-org local preview mode for the reproducible HTML fixture.
-- Made optional Salesforce skill integrations non-blocking on a fresh clone.
-- Renamed root contributor guidance to `CONTRIBUTING.md` so plugin validation is warning-free.
-- Replaced customer-shaped names and asset domains with fictional retail examples.
-
-## [0.3.0] — 2026-08-25 · Single flow with mandatory HTML preview
-
-### Changed
-
-- **Reduced to a single, linear flow: Figma → HTML preview → LWC.** The four-entry-point picker is gone. There is one path: paste a Figma source, extract the Brand Summary, review an intermediary HTML file in your browser, then transform into an LWC bundle + 5-piece contract.
-- **Step 3 (HTML preview) is non-skippable.** The skill writes `<component>.preview.html` and waits for an explicit YES (or an edit request) before transforming to LWC. Load-bearing checkpoint per CLAUDE.md principle #4. This is where the design-review moment lives — LWC has no mid-build browser preview, so the intermediary HTML is where you catch misread Figma tokens before the transform + write cycle.
-- **`figma-extractor` agent** no longer says "Entry 1 only" — it's the only extraction path now. Trigger language updated to reference Step 2.
-- **Slash command `/lwc-in-chat`** rewritten to describe the linear flow. The 1/2/3/4 picker language is gone.
-- **README** rewritten: one-flow description, `v0.3.0` badge, "Try it in 30 seconds" now shows the single Figma → HTML preview → LWC path, `building-agentforce-clt-widget` optional-integration line removed (Entry 3 is gone), rubric row wording updated.
-- **State canvas** adds an `## HTML Preview` section tracking preview path + approval status.
-
-### Removed
-
-- Entry point 2 (HTML → LWC as a standalone entry).
-- Entry point 3 (existing LWC → chat wiring / retrofit).
-- Entry point 4 (scan-my-folder → funnel).
-- The `S=switch path` standing option (nothing to switch between when there's one path).
-- The `references/entry-point-detection.md` file remains on disk but is unreferenced from `SKILL.md` — retained in case the multi-entry version is ever restored.
-
-### Archived
-
-- The full v0.2.2 multi-entry plugin is preserved at `~/Documents/claude/plugin homework/lwc-to-agentforce-chat-multi-entry/`. Not installed; reference-only. Restore by copying files back into the active plugin directory.
-
-### Rationale
-
-Shing wants to eyeball the HTML before it becomes LWC every time. The four-entry version treated HTML as one branch among four; this version bakes the HTML review into the middle of the only flow, where it can't be skipped.
-
-## [0.2.2] — 2026-08-25 · Docs + MCP detection fix
-
-### Fixed
-
-- **MCP detection copy no longer misleads.** The skill previously said "No Figma MCP is configured in `~/.claude/settings.json`" when tools were unavailable in the session. That was misleading — the MCP is bundled and registered by the plugin's own `.mcp.json`; the real state is often "registered but not authenticated." Detection logic in `references/figma-extraction.md` and `SKILL.md` now leads with `mcp__figma__*` tool availability in the session and separately calls out registered-but-unauthenticated as a distinct troubleshooting state.
-- **Editor-URL guidance added.** `figma.com/design/…?m=dev` (Figma editor URLs) are canvas SPAs. WebFetch only returns the login shell. The reference doc and SKILL.md now say so explicitly and route those URLs to Path A (MCP) or Path C (screenshot).
-
-### Added
-
-- **README `Set up Figma MCP` section** with prerequisites, auth flow, and how the walkthrough consumes the MCP.
-- **README `Troubleshooting` section** covering the common failure modes: MCP not authenticated, WebFetch on editor URLs, moved plugin folder, LWC_BUILD_STATE.md prompt, load-bearing checkpoints, skill not triggering on a bare URL, `sf` CLI missing.
-
-## [0.2.0] — 2026-08-25 · Figma-agnostic
-
-### Changed
-
-- **Removed the `fixtures/willas-corner-grocery-figma/` fixture.** Entry 1 now runs against a user-supplied Figma URL (public share link or MCP-accessible file). The plugin no longer bundles a canned Figma example — bring your own. `fixtures/example-html/` (Entry 2's HTML→LWC before/after sample) is preserved.
-- **Reference example rewritten with placeholders.** `skills/lwc-to-agentforce-chat/assets/examples/figma-input.md` now uses `<placeholder>` brand tokens instead of a specific fictional brand, so the walkthrough reads cleanly against any Figma input.
-- **README `Try it in 30 seconds` section updated** to reflect the two remaining try-flows (bring-your-own-Figma + bundled HTML fixture).
-
-### Rationale
-
-The bundled fixture was useful for out-of-the-box reproducibility, but the more common use case is running the plugin against a real Figma the developer already has. The Willa fixture is preserved in the sibling directory `lwc-to-agentforce-chat-willa/` (v0.1.0) for anyone who wants a canned reproducible example.
-
-## [0.1.0] — 2026-08-25 · Initial
-
-### Added
-
-- **Skill: `lwc-to-agentforce-chat`** (v0.1.0, experimental) — guided-wizard skill with four entry points (Figma / HTML / existing LWC / scan folder), teaching-block output after every substantive action, progressive-unlock standing options (`C=state`, `S=switch path`, `V=verify org`, `E=export docs`, `R=details`), and load-bearing checkpoints for all file writes and deploys.
-- **Agent: `figma-extractor`** — subagent for heavy Figma processing. Locked tool list (`Bash`, `Read`, `WebFetch`). Extracts Brand Summary + pattern inference from a Figma URL or PNG, returns structured JSON to the parent skill, avoids bloating the parent conversation with raw node-tree payloads.
-- **MCP config: `.mcp.json`** — Figma MCP server template (two options: official `@figma/mcp-server` and community `figma-developer-mcp`). Both entries disabled by default; user renames to `figma` to enable. Skill falls back to WebFetch on public Figma URLs if no MCP is configured.
-- **Slash command: `/lwc-in-chat`** — explicit invocation entry that maps directly to the skill's Step 1 surface picker.
-- **Fixtures**: `fixtures/willas-corner-grocery-figma/` (fictional Figma-input scenario with expected extraction output) and `fixtures/example-html/` (before/after HTML→LWC transform sample). Both are fully fictional — no real customer names, URLs, or metadata.
-- **Governance docs**: `CLAUDE.md` (contributor principles), `README.md` (install + demo in <5 min), `GUIDE.md` (one-page "build your own plugin for a different entry-point workflow").
-
-### Known limitations
-
-- Figma MCP detection is a config-file check (`.mcp.json` inspection). If a user has the MCP server available but not registered in `.mcp.json`, the skill won't pick it up.
-- HTML→LWC transform v0.1 covers 8 rules. Handlebars/Mustache templating and dynamic `<script>` handling are outside scope for now — flagged as future work.
-- Entry 3 retrofit delegates to `building-agentforce-clt-widget` for state detection. If that skill isn't installed, the retrofit path degrades to a manual walkthrough.
-- Zero sandbox writes: this plugin never runs `sf project deploy start` autonomously. Load-bearing checkpoints require explicit YES before every write to `force-app/` and every `sf` deploy command.
+- Initial experimental plugin with a guided skill, extractor agent, hook, MCP
+  configuration, README, and customer self-service guide.

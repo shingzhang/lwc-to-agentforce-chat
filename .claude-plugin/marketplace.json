@@ -8,8 +8,8 @@
     {
       "name": "lwc-to-agentforce-chat",
       "source": "./",
-      "description": "Turn a Figma design into an Agentforce in-chat Lightning Web Component, with a mandatory HTML preview step so you can review the design in a browser before it becomes LWC.",
-      "version": "0.4.3"
+      "description": "Turn a retail Figma design into a deployable Agentforce in-chat Lightning Web Component with an HTML review checkpoint and complete metadata wiring.",
+      "version": "0.5.0"
     }
   ]
 }

@@ -2,34 +2,34 @@
 
 Fast lookup from a symptom the user reports (or a state this skill detects during a build) to a numbered Failure Mode. This skill tracks 17 numbered failure modes plus a "bonus" entry; this file is the catalog.
 
-Teaching blocks in `SKILL.md` **never restate the full fix inline**. They cite the number, print a one-line diagnosis, and offer `R=details on Failure Mode #N` so the user can jump to the full write-up below. That keeps each teaching block short without losing the detail — everything is in this file, not off in a skill the reviewer may not have installed.
+Teaching blocks in `SKILL.md` cite the number and a one-line diagnosis. When the user asks for details, use the full write-up below. Everything stays in this repository.
 
 ## Full crosswalk table
 
 | Symptom / What the user sees | Detected at | FM # | One-line diagnosis |
 |---|---|---|---|
-| First user message triggers no reply; conversation ends with no error | Step 10 (Agent Script write, missing `variables:` block); Deploy checkpoint | **1** | `.agent` file missing `EndUserId` / `RoutableId` / `ContactId` / `EndUserLanguage` linked-string variables |
-| Chat surface loads but hangs on "Connecting to agent..." | Deploy checkpoint (post-deploy verify); `V=verify org` check | **2** | Channel `RoutingType` not `null` or bot user missing permset assignment via `--on-behalf-of` |
-| Agent's welcome message arrives after the user's first utterance | Step 11 (Deploy checkpoint); manual UI review | **3** | ECV2 `bootstrap.init()` racing with utterance-send; timing / event-order bug |
-| Console shows `Uncaught TypeError: sendTextMessage is undefined` | Step 11 (Deploy checkpoint) | **4** | Embedded Service SDK not loaded before wrapper LWC mounts; script tag order wrong |
+| First user message triggers no reply; conversation ends with no error | Step 11 Agent Script review; Step 13 test | **1** | `.agent` file missing required linked-string context variables for its channel |
+| Chat surface loads but hangs on "Connecting to agent..." | Step 13 post-deploy test | **2** | Channel `RoutingType` not `null` or bot user missing permset assignment via `--on-behalf-of` |
+| Agent's welcome message arrives after the user's first utterance | Step 13 manual UI review | **3** | ECV2 `bootstrap.init()` racing with utterance-send; timing / event-order bug |
+| Console shows `Uncaught TypeError: sendTextMessage is undefined` | Step 13 manual UI review | **4** | Embedded Service SDK not loaded before wrapper LWC mounts; script tag order wrong |
 | Chat renders as bottom-right floating FAB, not inline | Manual UI review (embed-mode config); Deploy checkpoint | **5** | Wrapper LWC missing `displayMode: 'inline'` in `bootstrap.init()` config |
-| ECV2 host div exists in DOM but iframe never renders inside it | Step 11 (Deploy checkpoint); DL cross-check | **6** | Guest user permset missing on the ESW backing site, or `areGuestUsersAllowed=false` |
-| Agent reply is plain text/JSON instead of the branded card | Step 10 (Piece 5 write) | **7** | `.agent` output missing `is_displayable: True` and/or `complex_data_type_name: "c__<Folder>"` |
-| Card renders but product/asset images are blank | Step 4 (LWC transform, external image host); Deploy checkpoint | **8** | External image host not in `CspTrustedSite` metadata |
+| ECV2 host div exists in DOM but iframe never renders inside it | Step 13 manual UI review | **6** | Guest user permset missing on the ESW backing site, or `areGuestUsersAllowed=false` |
+| Agent reply is plain text/JSON instead of the branded card | Step 11 Agent Script review; Step 13 test | **7** | `.agent` output is not `object` or is missing `is_displayable`, `filter_from_agent`, or `complex_data_type_name` |
+| Card renders but product/asset images are blank | Step 4 transform; Step 12 CSP decision; Step 13 test | **8** | External image host not in `CspTrustedSite` metadata |
 | Card mounts but `this.value` is `undefined` in LWC | Step 4 (LWC transform); Step 8 (Piece 3 LWC bundle write) | **9** | LWC uses plain `@api value` prop instead of reactive getter/setter |
 | Card mounts, `value` is populated, but template renders blank | Step 4 (LWC transform); Step 8 (Piece 3 LWC bundle write) | **10** | Duplicate `connectedCallback` in `.js`; second definition shadows the JSON-parse hook |
 | ECV2 agent header still visible after chrome hide | Manual UI review (embed-mode config) | **11** | `.embedded-messaging` CSS overrides missing or overridden by SLDS `*` reset |
 | Chat closes; console shows no error; SSE stream terminates | Step 4 (LWC transform); Step 8 (`.js-meta.xml` write); Deploy checkpoint | **12** | `.js-meta.xml` `<targetConfigs>` block missing or `sourceType name` doesn't match `.agent` `complex_data_type_name` |
-| Runtime error: `insufficient access rights on cross-reference id` | Deploy sequence step 6 (`sf org assign permset`); `V=verify org` check | **13** | Permission set assigned to CLI user or admin, not to the bot user (needs `--on-behalf-of <botUser>`) |
+| Runtime error: `insufficient access rights on cross-reference id` | Step 12 permission-set review; Step 13 assignment/test | **13** | Permission set assigned to CLI user or admin, not to the bot user (needs `--on-behalf-of <botUser>`) |
 | Contextual wizard panel opens on first query but not on second | Manual UI review (contextual panel config); Deploy checkpoint | **14** | postMessage bridge listener attached once at mount; needs re-attach on each session |
-| Local state canvas breaks after `sf project retrieve` | Any step (state canvas check); `V=verify org` check | **15** | Retrieve overwrote local `.js-meta.xml` `<targetConfigs>` block with org's older shape |
+| Local state canvas breaks after `sf project retrieve` | Any state update; Step 13 verification | **15** | Retrieve overwrote local `.js-meta.xml` `<targetConfigs>` block with org's older shape |
 | `sf project deploy start` fails: `Schema update contains breaking changes` | Deploy checkpoint | **16** | LightningType `schema.json` changed after being referenced by a deployed `.agent`; requires deactivate + republish sequence |
 | ESD Publish returns `Something went wrong, Gack ID: XXX-YYY (-N)` | Manual UI republish step | **17** | Transient async race on Publish endpoint; retry with 30–60s waits, up to 5 attempts |
-| Agent Builder Preview renders card, but Test Enhanced Chat (live ECV2) shows plain text | Step 11 diagnostic; user reports post-deploy | **Bonus** | Preview uses in-app render path; live chat uses ECV2's separate resolver that requires the LightningType to be fully deployed + ESD republished |
+| Draft Agent Builder preview omits the card, but the activated chat surface renders it | Step 13 test | **Bonus** | Draft preview has a known CLT renderer limitation; test the committed and activated agent in its deployed surface |
 
 ## Full write-ups — the 5 failure modes this skill checks proactively
 
-The table above is a fast index for every failure mode. These five are the ones `references/html-to-lwc-transforms.md` and `SKILL.md` actively check for at transform time and during the 5-piece contract writes, so they get the full fix here instead of a one-liner.
+The table above is a fast index. These five are checked proactively during transform, metadata generation, and deployment, so they get full fixes here.
 
 ### Failure Mode #7 — Card replaced by text
 
@@ -41,7 +41,8 @@ The table above is a fast index for every failure mode. These five are the ones 
 ```yaml
 outputs:
   carousel:
-    type: String
+    type: object
+    filter_from_agent: False
     is_displayable: True
     complex_data_type_name: "c__Retail_ShoppingCarousel"
 ```
