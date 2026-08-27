@@ -8,8 +8,8 @@ Turn a Figma design into a Lightning Web Component that renders inside an Agentf
 
 ## Who this is for
 
-- A Salesforce front-end developer at a large retail enterprise who owns Agentforce in-chat experiences.
-- They already have a Figma design; the expensive part is wiring it into the five metadata pieces the chat renderer expects.
+- A Salesforce front-end developer at an enterprise customer who owns Agentforce in-chat experiences. Common in retail (product carousels), financial services (account cards), and service industries (appointment booking, order status).
+- They already have a Figma design. The expensive part is wiring it into the five metadata pieces the chat renderer expects.
 
 ## What it does
 
