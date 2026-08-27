@@ -2,6 +2,42 @@
 
 All notable changes to `lwc-to-agentforce-chat` will be documented here. The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.1] — 2026-08-26 · Field-tested hardening: hook + ground rules
+
+Two lessons from a full end-to-end run of the plugin against a customer-shaped build:
+
+- URLs invented by the model 404 silently in production because the LWC's image error handler (Failure Mode #8) hides broken images.
+- When a mechanism isn't working (image rendering, agent typing, Trusted URL config), inspecting a known-good reference in the same org is faster than debugging blind.
+
+### Added
+
+- **`hooks/verify-image-urls.sh`** — PreToolUse hook that fires on every Bash tool call, filters to `sf project deploy`, extracts `.jpg` / `.jpeg` / `.png` / `.gif` / `.webp` / `.svg` URLs from the staged `*.cls` files, and blocks the deploy (`exit 2`) if any return HTTP 4xx / 5xx. Prints a three-step fix path to stderr so the model can recover: try WebFetch on any brand URL the user has already mentioned; ask the user for verified URLs if that fails; curl each replacement to 200 before retrying. Skips 000 (network error) so genuine offline deploys aren't blocked. Non-image link values (product URLs, docs) are ignored to avoid false positives on redirects and dynamic pages.
+- **`hooks/hooks.json`** — hook registration for the plugin loader (`PreToolUse` × `Bash` matcher, `${CLAUDE_PLUGIN_ROOT}` command path).
+- **Two new Ground rules in `SKILL.md`.** (1) Try WebFetch on any brand or product URL the user already mentioned before asking for image URLs directly. Verify what you get (200 + Read a sample). (2) When a mechanism isn't working, `sf project retrieve start -m AiAuthoringBundle:<known-working-name>` and diff against a reference before inventing a fix.
+- **README `hooks/` entry** in the "What's inside" tree, a new guardrail line for the hook, and a troubleshooting entry explaining what to do when the deploy is blocked.
+
+### Changed
+
+- Bumped plugin, marketplace, and skill versions to `0.4.1`.
+
+## [0.4.0] — 2026-08-26 · Fully standalone
+
+### Changed
+
+- **Removed every external-skill dependency.** The plugin previously cited `experience-cloud-site-builder`, `building-agentforce-clt-widget`, `generating-lwc-components`, and `applying-slds` for deeper content — the 5-piece contract templates, the numbered failure-mode fixes, the deploy sequence, and the Figma manual fallback. A reviewer cloning this repo with none of those installed would hit dead references at exactly the moments the skill promises the most detail.
+- **`SKILL.md` §B Phase 5** now contains the full 5-piece contract inline: the Apex DTO template, all three LightningType bundle files (`schema.json`, `renderer.json`, `.lightningTypeBundle-meta.xml`), the Invocable Apex template, the Agent Script `.agent` action snippet with the two magic lines, the naming table, and the full `sf` deploy sequence in order.
+- **`references/failure-mode-crosswalk.md`** now has full symptom / cause / fix / verify write-ups for Failure Modes #7, #8, #9, #10, and #12 — the five this skill checks proactively — instead of pointing at an external §C. The `R=details` handler reads from this file directly.
+- **`references/figma-extraction.md`** now inlines the Manual fallback (ask for primary/accent color, logo, font directly when no Figma source is available) and a short note on mapping tokens to SLDS styling hooks, instead of citing an external skill for both.
+- **`references/entry-point-detection.md`** now inlines the ✓/⚠/✗ state-table shape and the org-side `sf data query` inventory checks directly, rather than delegating to two other skills for a scan this file already owns.
+- **`references/html-to-lwc-transforms.md` and `references/teaching-blocks.md`** — every `Failure Mode #N in <external skill>` citation became `Failure Mode #N`, pointing at this plugin's own crosswalk file.
+- **`CONTRIBUTING.md` principle #1** ("Defer, don't duplicate") — rewritten to "Keep the plugin self-contained," since the old principle actively argued against standalone operation.
+- Bumped plugin, marketplace, and skill versions to `0.4.0`.
+
+### Notes
+
+- The internal-referencing version of this plugin (the one that assumes those Salesforce skills are installed and defers to them for depth) is preserved as a sibling at `lwc-to-agentforce-chat-internal/`. That version is unchanged by this release.
+- The `experience-cloud-site-builder` skill has evolved since this plugin's citations were written — its current `SKILL.md` no longer contains the CLT/5-piece-contract material or the numbered-failure-mode catalog this plugin pointed at. The inlined templates and fixes above were written fresh for this plugin, grounded in the same Apex/LWC/Agent Script conventions and in the concrete detail already present elsewhere in this plugin's own files, rather than copied from content that no longer exists at the cited location.
+
 ## [0.2.1] — 2026-08-25 · Submission hardening
 
 ### Changed

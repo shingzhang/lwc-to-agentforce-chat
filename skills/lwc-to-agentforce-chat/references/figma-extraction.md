@@ -25,7 +25,7 @@ Extract from the returned node tree:
 - **Component names** — anything published as a component (they usually match brand-system names).
 - **Exact tokens** — every fill color, font-family, font-weight, font-size, letter-spacing, corner radius, spacing (padding/margin), shadow (blur/spread/color).
 
-**Structured output shape.** Emit the Brand Summary format (mirrors `experience-cloud-site-builder` Phase 1.2, line 566):
+**Structured output shape.** Emit the Brand Summary format below:
 
 ```
 Brand Summary
@@ -52,7 +52,7 @@ The `Spacing:` row is new vs v1 — Figma MCP gives us the design's spacing scal
 | A date grid (7-column layout) + a time-slot pill group | **appointment scheduler** |
 | A status timeline (dot-line-dot-line-dot horizontal or vertical) | **order status card** |
 | A vertical 3-card stack with a reasoning-line text node above | **product picks** |
-| Anything else | Ask user; fall back to `experience-cloud-site-builder` full wizard |
+| Anything else | Ask user directly — see the Manual fallback below |
 
 Print the recommendation with the reasoning (a one-sentence explanation of which visual cue you keyed on).
 
@@ -130,8 +130,17 @@ Reply YES to proceed, or describe corrections
 
 If Path B ran, omit `Spacing:` (we don't have it). If Path C ran, add `(inferred)` next to any token that wasn't clearly visible.
 
-## Cross-references
+## Manual fallback (no Figma, no screenshot)
 
-**REQUIRED:** Use `experience-cloud-site-builder` Phase 1.2 for the underlying Brand Summary shape, the "URL / screenshot / manual" three-option pattern, and the Manual fallback (colors + font + logo as literal user input).
+If none of Path A/B/C apply — no MCP, no fetchable URL, no image file — ask the user directly for the tokens instead of guessing:
 
-**RECOMMENDED:** Use `applying-slds` for translating extracted tokens into SLDS styling hooks if the LWC should map to SLDS design tokens rather than raw hex — e.g., `--slds-c-button-brand-color-background` instead of `#C41E3A`. This matters when the customer wants their card to inherit theme updates without re-deploying the LWC.
+- Primary color (hex)
+- Accent/secondary color (hex)
+- Logo file path or URL
+- Font preference
+
+Fill in reasonable defaults for anything not asked (secondary `#1A1A1A`, text `#333333`, background `#FFFFFF`, border radius `8px`, shadow `0 2px 8px rgba(0,0,0,0.08)`) and mark them `(default)` in the Brand Summary output so the user can see what they didn't specify.
+
+## Mapping tokens to SLDS styling hooks (optional)
+
+If the LWC should inherit theme updates without a redeploy, map the extracted hex values to SLDS styling hooks instead of hardcoding them — e.g. `--slds-c-button-brand-color-background` instead of `#C41E3A`. This only matters when the customer wants the card's colors to follow their SLDS theme automatically; for a one-off brand card, raw hex in the `.css` sibling file (Transform 4 in `references/html-to-lwc-transforms.md`) is simpler and fine.

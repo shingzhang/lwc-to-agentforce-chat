@@ -2,7 +2,7 @@
 
 The skill's core promise is *guiding + teaching* — not just producing output. Every substantive action the skill takes produces a compact three-line block that names What just happened, Why it mattered, and what comes Next. The reader learns the underlying LWC contract without having to ask a question or open a separate doc.
 
-The Why is where the teaching lives. It grounds the current action in an actual constraint — shadow DOM, reactive `@api value`, targetConfigs binding, deploy-order — and cites a numbered Failure Mode from `experience-cloud-site-builder` §C when relevant. That anchoring is what turns "the skill did a thing" into "I understand why the skill did that thing."
+The Why is where the teaching lives. It grounds the current action in an actual constraint — shadow DOM, reactive `@api value`, targetConfigs binding, deploy-order — and cites a numbered Failure Mode when relevant (full write-up in `references/failure-mode-crosswalk.md`). That anchoring is what turns "the skill did a thing" into "I understand why the skill did that thing."
 
 ---
 
@@ -22,7 +22,7 @@ Rules:
 
 - Progress label uses `~` because M can drift ±2.
 - **What** is past tense, one line, no more.
-- **Why** is one sentence, present tense. Cites a failure mode by number when relevant (`Failure Mode #N in experience-cloud-site-builder`).
+- **Why** is one sentence, present tense. Cites a failure mode by number when relevant (`Failure Mode #N` — full write-up in `references/failure-mode-crosswalk.md`).
 - **Next** tees the next step.
 - Footer is progressive-unlock — see `references/progress-labels.md`.
 
@@ -84,7 +84,7 @@ One per entry-point situation. Copy the shape verbatim.
 ✓ Step 6 of ~9 — Patched @api value into a reactive getter/setter.
 
   What: Replaced `@api value;` with a getter/setter pair that re-parses the incoming DTO's productsJSON on every update.
-  Why:  The chat client can update `value` after mount; a plain @api prop reads once and never re-renders. This is Failure Mode #9 in experience-cloud-site-builder — "Card mounts, value populated, template renders blank."
+  Why:  The chat client can update `value` after mount; a plain @api prop reads once and never re-renders. This is Failure Mode #9 — "Card mounts, value populated, template renders blank."
   Next: Step 7 — I'll verify your .js-meta.xml has the lightning__AgentforceOutput target and a targetConfigs binding.
 
 ? · C=state · S=switch path · V=verify org
@@ -108,7 +108,7 @@ One per entry-point situation. Copy the shape verbatim.
 ✓ Step 10 of ~12 — Wrote Agent Script action for the carousel.
 
   What: Added `show_carousel` action to your .agent file with `is_displayable: True` and `complex_data_type_name: "c__Retail_Shopping_Carousel"`.
-  Why:  These two lines are the whole difference between a chat that renders raw JSON and one that mounts your LWC. Failure Mode #7 in experience-cloud-site-builder — "Card replaced by text" — is what happens without them.
+  Why:  These two lines are the whole difference between a chat that renders raw JSON and one that mounts your LWC. Failure Mode #7 — "Card replaced by text" — is what happens without them.
   Next: Step 11 — Deploy checkpoint. I'll print the exact sequence for you to run.
 
 ? · C=state · S=switch path · V=verify org · E=export docs
@@ -136,4 +136,4 @@ One per entry-point situation. Copy the shape verbatim.
 - Never omit the `Step N of ~M` label
 - Never write a paragraph — three lines, three fields, that's it
 - Never skip the footer once options have unlocked
-- Never invent a Failure Mode number — cite only real ones (1–17 + bonus) from `experience-cloud-site-builder` §C
+- Never invent a Failure Mode number — cite only real ones (1–17 + bonus), all catalogued in `references/failure-mode-crosswalk.md`

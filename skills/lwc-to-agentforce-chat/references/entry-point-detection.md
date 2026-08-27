@@ -11,7 +11,7 @@ The scan is read-only. It never writes files, never runs `sf` against an org, ne
 | Figma export files (`*.fig`, `.figma/` dir, PNG/JPG in `exports/`, `design/`, or `mockups/`) | `find . -maxdepth 4 -type f \( -iname '*.fig' -o -iname '*.png' -o -iname '*.jpg' \) \( -path '*design*' -o -path '*mockup*' -o -path '*export*' \)` | User has visuals, no code | **Entry 1 (Figma)** |
 | Standalone HTML files (`*.html` at root or in `prototype/`, `mockups/`, `demo/`, but NOT inside `node_modules/` or `dist/`) | `find . -maxdepth 3 -type f -iname '*.html' -not -path '*/node_modules/*' -not -path '*/dist/*'` | User has HTML markup | **Entry 2 (HTML)** |
 | Existing LWC bundle (a dir under `force-app/main/default/lwc/*/` with a `.js-meta.xml`) | `find force-app/main/default/lwc -maxdepth 2 -name '*.js-meta.xml' 2>/dev/null` | LWC exists | **Entry 3 (Existing LWC)** |
-| Existing DTO (Apex class with `@JsonAccess(serializable='always'` in the body) | `grep -rIl "@JsonAccess(serializable='always'" force-app/main/default/classes/ 2>/dev/null` | DTO scaffolded but maybe incomplete | **Entry 3** (delegate to `building-agentforce-clt-widget` Branch C) |
+| Existing DTO (Apex class with `@JsonAccess(serializable='always'` in the body) | `grep -rIl "@JsonAccess(serializable='always'" force-app/main/default/classes/ 2>/dev/null` | DTO scaffolded but maybe incomplete | **Entry 3** (partial retrofit — fill in the missing pieces of the 5-piece contract) |
 | Existing LightningTypeBundle (a `schema.json` under `force-app/main/default/lightningTypes/`) | `find force-app/main/default/lightningTypes -maxdepth 3 -name schema.json 2>/dev/null` | Type scaffolded | **Entry 3** |
 | Existing agent bundle (a `.agent` file under `force-app/main/default/aiAuthoringBundles/`) | `find force-app/main/default/aiAuthoringBundles -maxdepth 3 -name '*.agent' 2>/dev/null` | Agent Script exists | **Entry 3** |
 | `sfdx-project.json` present, everything else empty | `test -f sfdx-project.json` | Fresh SFDX project | Ask user what they want to bring in |
@@ -46,7 +46,7 @@ Found:
 
 Recommendation: **Entry 3 — Existing LWC → chat wiring**
   You have Pieces 1 and 3 of the 5-piece contract. We'll add Pieces 2, 4, 5
-  by delegating to building-agentforce-clt-widget (Branch C: partial retrofit).
+  directly (partial retrofit).
 
 Alternatives:
   • Entry 2 — if you want to rebuild the LWC from an HTML source instead
@@ -62,10 +62,34 @@ Rules for the emit:
 - Two alternative bullets (skip if only one entry point is plausible).
 - Numeric reply prompt at the end so the user can just type a digit.
 
-## Cross-references
+## State table shape
 
-- **REQUIRED:** `building-agentforce-clt-widget` Step 1 — the state-detection algorithm this file mirrors. Reuse its 5-row state table (LWC / CLT / DTO / Invocable / Agent) with ✓/⚠/✗ per piece. When our scan detects any of those pieces, print the state table verbatim from that skill; do not re-derive the ✓/⚠/✗ semantics here.
-- **REQUIRED:** `experience-cloud-site-builder` Phase 0 (Pre-flight Inventory) — for the `sf` queries that check the *org* side of state (BotDefinition, MessagingChannel, Site). The scan in this file is local-only; org-side inventory is Phase 0.
+When the scan (or a retrofit build) detects any pieces of the 5-piece contract, print a state table with one row per piece and a ✓/⚠/✗ status:
+
+```
+| Piece | Status | Notes |
+|---|---|---|
+| 1. Apex DTO | ✓ | RetailProductPicksData.cls found |
+| 2. LightningType bundle | ✗ | not found |
+| 3. LWC bundle | ✓ | retailPersonalizedPicks/ found |
+| 4. Invocable Apex service | ✗ | not found |
+| 5. Agent Script (.agent) | ⚠ | found, missing is_displayable |
+```
+
+✓ = present and looks complete. ⚠ = present but incomplete (e.g., `.agent` action exists but is missing `is_displayable`). ✗ = not found.
+
+## Org-side inventory (once a target org is set)
+
+The scan above is local-only — files on disk. When the user has a target org and wants to know what's already deployed, run these read-only queries and diff the result against the local scan:
+
+```bash
+sf data query --query "SELECT Id, DeveloperName, MasterLabel FROM BotDefinition" --target-org <alias>
+sf data query --query "SELECT Id, DeveloperName, RoutingType FROM MessagingChannel" --target-org <alias>
+sf data query --query "SELECT Id, DeveloperName FROM LightningTypeBundleInfo" --target-org <alias>
+sf data query --query "SELECT Id, AssigneeId, PermissionSet.Name FROM PermissionSetAssignment WHERE PermissionSet.Name = '<PermSetName>'" --target-org <alias>
+```
+
+A piece can be ✓ locally and ✗ in the org — written but not deployed. Call that out explicitly in the state table rather than collapsing it into a single status.
 
 ## Corner cases
 

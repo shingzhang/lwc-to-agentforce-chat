@@ -13,16 +13,16 @@ description: >
 
   DO NOT TRIGGER when: user only has HTML with no Figma source (this version is
   Figma-first — bring the design); user wants an LWC on an Experience Builder
-  page (use experience-cloud-site-builder Path A); user is auditing an existing
-  build (use experience-cloud-site-builder Path C); user is authoring the
-  Custom Lightning Type schema from scratch (use generating-custom-lightning-type
-  first, then return here); user has zero Salesforce context (start with
-  developing-agentforce for agent-first work).
+  page rather than in a chat bubble; user is only auditing an existing build
+  with no changes planned; user is authoring the Custom Lightning Type schema
+  from scratch (use generating-custom-lightning-type first, then return here);
+  user has zero Salesforce context (start with developing-agentforce for
+  agent-first work).
 license: MIT
 experimental: true
 metadata:
-  version: "0.3.0"
-  last_updated: "2026-08-25"
+  version: "0.4.1"
+  last_updated: "2026-08-26"
 allowed-tools:
   - Bash
   - Read
@@ -31,14 +31,6 @@ allowed-tools:
   - Grep
   - Glob
   - WebFetch
----
-
-**OPTIONAL ENRICHMENT:** If `experience-cloud-site-builder` is installed, consult it for deeper 5-piece contract, deploy, manual UI, and failure-mode guidance. If it is unavailable, continue with this skill's local Phase 5 contract and reference files; never block the fresh-clone workflow.
-
-**RECOMMENDED:** Use `generating-lwc-components` for general LWC best practices (a11y, Jest, wire adapters).
-
-**RECOMMENDED:** Use `applying-slds` for SLDS blueprints and styling hooks when the HTML source lacks them.
-
 ---
 
 # lwc-to-agentforce-chat — Figma → HTML preview → LWC
@@ -67,6 +59,8 @@ The skill's core promise is **guiding + teaching + a real design-review moment**
 - **The HTML preview step (Step 3) is mandatory and non-skippable.** The user reviews the intermediary HTML in a browser (or as rendered markup) before any LWC transform runs.
 - Standing options unlock progressively (see "Standing options" below). The opening prompt shows no `C/S/R/V/E` block. From Step 2 onward, print a short footer listing only options that are actionable at that point. `?` is always in the footer once anything is unlocked.
 - If the user provides a Figma URL / PNG / file path up front, **infer aggressively** and skip the opening prompt.
+- **Try WebFetch on any brand or product URL the user has already mentioned before asking them for image URLs directly.** Verify what you get: URL returns HTTP 200, and image content matches its label — download one sample and Read it before wiring the rest. Ask the user for URLs only after WebFetch fails or returns nothing usable. Fabricated URLs 404 silently through the LWC's image error handler (Failure Mode #8), so verify before you deploy. A PreToolUse hook (`hooks/verify-image-urls.sh`) enforces this at deploy time: it scans staged `*.cls` files for `.jpg` / `.png` / `.gif` / `.webp` / `.svg` URLs and blocks `sf project deploy` if any return 4xx/5xx. Fix the URLs in-file, don't attempt to bypass the hook.
+- **When a mechanism isn't working (image rendering, agent typing, Trusted URL config, targetConfigs binding, `agent_type` errors), retrieve a known-good reference from the same org and diff before inventing a fix.** `sf project retrieve start -m AiAuthoringBundle:<working-name>` — or the equivalent for `LightningComponentBundle` / `ApexClass` / `LightningTypeBundle`. Reference agents in the same org are the ground truth for what works there; cheaper than debugging blind.
 - When an SFDX project is present, the state canvas at `<project>/LWC_BUILD_STATE.md` is the source of truth. In local preview mode, keep the same state in chat and do not create files.
 - Convert relative dates in the user's messages to absolute dates when writing to the state canvas.
 - **Always show progress.** Every question is labeled `Step N of ~M — <topic>` so the user knows where they are. The tilde is deliberate — count can shift ±2 based on answers.
@@ -82,8 +76,8 @@ Trigger phrases:
 
 Does **not** apply if:
 - The user has HTML but no Figma (this version is Figma-first — the archived multi-entry version at `~/Documents/claude/plugin homework/lwc-to-agentforce-chat-multi-entry/` covered HTML/existing-LWC/scan entries).
-- The user only wants an LWC on a Lightning Record Page / App Page / Experience Builder page (use `experience-cloud-site-builder` Path A).
-- The user is auditing an existing build without changes (use `experience-cloud-site-builder` Path C).
+- The user only wants an LWC on a Lightning Record Page / App Page / Experience Builder page, not a chat bubble.
+- The user is auditing an existing build without making changes.
 - The user is authoring a Custom Lightning Type schema from scratch (use `generating-custom-lightning-type` first, then return here).
 - The user has zero Salesforce context (start with `developing-agentforce`).
 
@@ -230,7 +224,7 @@ When the user types `?`, print the plain-English descriptions **for only the cur
 ### Handling
 
 - `C` → print the current `LWC_BUILD_STATE.md` verbatim in a fenced block.
-- `R` → show the specific §C failure-mode entry (delegates to `experience-cloud-site-builder` §C for the full content). Only respond to `R` if the previous turn cited a rule/failure mode.
+- `R` → show the specific failure-mode entry from `references/failure-mode-crosswalk.md`, printed verbatim. Only respond to `R` if the previous turn cited a rule/failure mode.
 - `V` → run `sf` queries (BotDefinition, MessagingChannel, LightningTypeBundle, PermissionSetAssignment for bot user) and diff against state canvas.
 - `E` → invoke §B Phase 5 documentation export.
 - `?` → print verbose descriptions of currently-unlocked options only.
@@ -408,7 +402,7 @@ Teaching after Step 4:
 ? · C=state
 ```
 
-Enforce these anti-patterns from `experience-cloud-site-builder` §C at transform time:
+Enforce these anti-patterns at transform time (full write-up of each in `references/failure-mode-crosswalk.md`):
 
 - Single `connectedCallback` per file (never duplicate — Failure Mode #10)
 - `@api value` getter/setter reactive pattern — not a plain prop read once (Failure Mode #9)
@@ -421,7 +415,7 @@ Enforce these anti-patterns from `experience-cloud-site-builder` §C at transfor
 
 **Consults §B Phase 5.** One piece per step, one question at a time, YES per write.
 
-5. **Naming.** Prefix (lowerCamelCase), LWC bundle name, Apex DTO class, LightningType folder. Cite `experience-cloud-site-builder` Phase 2 naming table.
+5. **Naming.** Prefix (lowerCamelCase), LWC bundle name, Apex DTO class, LightningType folder. Use the naming table in §B Phase 5.
 6. **Piece 1 preview (Apex DTO)** → YES → write. Cite Phase 2 Piece 1.
 7. **Piece 2 preview (LightningType bundle: `schema.json`, `renderer.json`, `.lightningTypeBundle-meta.xml`)** → YES → write. Cite Phase 2 Piece 2.
 8. **Piece 3 preview (LWC bundle)** — already generated at Step 4. Confirm final paths + write. Cite Phase 2 Piece 3.
@@ -431,7 +425,7 @@ Enforce these anti-patterns from `experience-cloud-site-builder` §C at transfor
    ✓ Step 8 of ~11 — LWC bundle written.
 
      What: Wrote retailShoppingCarousel/{.js,.html,.css,.js-meta.xml} with an @api value getter/setter that parses productsJSON from the DTO.
-     Why:  The chat client updates value after mount; a plain @api prop reads once and never re-renders. This is Failure Mode #9 in experience-cloud-site-builder — "Card mounts, value populated, template renders blank."
+     Why:  The chat client updates value after mount; a plain @api prop reads once and never re-renders. This is Failure Mode #9 — "Card mounts, value populated, template renders blank."
      Next: Step 9 — Piece 4, the Invocable Apex service.
 
    Type R for details on Failure Mode #9.
@@ -446,7 +440,7 @@ Enforce these anti-patterns from `experience-cloud-site-builder` §C at transfor
 
 ## Step 11 — Deploy checkpoint
 
-Print the exact deploy sequence from `experience-cloud-site-builder` Phase 8. The skill **never** runs `sf project deploy start` — the user runs it.
+Print the exact deploy sequence from §B Phase 5 ("Deploy sequence" below). The skill **never** runs `sf project deploy start` — the user runs it.
 
 After Step 11, the `E=export docs` option unlocks.
 
@@ -456,7 +450,7 @@ After Step 11, the `E=export docs` option unlocks.
 
 Only respond to `R` if the previous turn cited a specific rule or failure mode. Otherwise: "There's nothing cited yet; I'll surface `R` inline when I reference a specific Failure Mode."
 
-When cited, print the specific §C entry from `experience-cloud-site-builder` verbatim — do not summarize. The reference values (retry counts, timing constants, SOQL queries to verify) are precise and cite-worthy.
+When cited, print the specific entry from `references/failure-mode-crosswalk.md` verbatim — do not summarize. The reference values (retry counts, timing constants, SOQL queries to verify) are precise and cite-worthy.
 
 For a full crosswalk of symptoms → failure mode numbers, see `references/failure-mode-crosswalk.md`.
 
@@ -498,7 +492,7 @@ Shadow:     0 2px 8px rgba(0,0,0,0.08)
 ─────────────────────────────
 ```
 
-Cross-references: `experience-cloud-site-builder` Phase 1.2 for the source shape and Manual fallback.
+See `references/figma-extraction.md` for the full detection logic, the source shape, and the Manual fallback path.
 
 ---
 
@@ -521,7 +515,7 @@ Applies 8 transformations in order:
 
 Each transform emits its own What / Why / Next block when applied. The teaching layer is what turns a rote transform into a lesson.
 
-Cross-references: `experience-cloud-site-builder` Phase 2 Piece 3 for the full LWC bundle contract; `generating-lwc-components` for a11y, Jest, wire adapters.
+See `references/html-to-lwc-transforms.md` for the full LWC bundle contract ("The receiving wrapper" section), plus a11y basics, Jest test scaffolding, and wire-adapter notes.
 
 ---
 
@@ -529,27 +523,185 @@ Cross-references: `experience-cloud-site-builder` Phase 2 Piece 3 for the full L
 
 **Consulted from §A when:** Steps 6–10.
 
-**This phase is a thin wrapper.** The 5-piece contract templates live in `experience-cloud-site-builder` Phase 2 — do not duplicate them here.
+A card only renders inside an Agentforce chat bubble if all five pieces below exist and the two required pairings match exactly. Each piece is previewed and written one step at a time (Steps 6–10); this section is the concrete template for each. Names below use `Retail_ShoppingCarousel` / `retailShoppingCarousel` as the running example — swap in whatever the user named their bundle at Step 5.
 
-The five pieces:
-1. **Apex DTO** — global class, `@JsonAccess(serializable='always' deserializable='always')`, `@AuraEnabled` field, two constructors. Details: `experience-cloud-site-builder` Phase 2 Piece 1.
-2. **LightningType bundle** — `schema.json` binds to the DTO with `c__` prefix; `renderer.json` binds to the LWC; `.lightningTypeBundle-meta.xml` wraps them. Details: Phase 2 Piece 2.
-3. **LWC bundle** — `.js` with `@api value` getter/setter, `.html`, `.css`, `.js-meta.xml` with `lightning__AgentforceOutput` target + `<targetConfigs>` binding. Details: Phase 2 Piece 3.
-4. **Invocable Apex** — `@InvocableMethod` returning both a displayable DTO output AND a text narrative for the LLM. Details: Phase 2 Piece 4.
-5. **Agent Script `.agent`** — action with the two magic lines: `is_displayable: True` + `complex_data_type_name: "c__<LightningTypeFolder>"`. Details: Phase 2 Piece 5.
+### Piece 1 — Apex DTO
 
-**Two required pairings** — must match exactly:
+Global class, `@JsonAccess` open in both directions, one `@AuraEnabled` field per value the LWC needs, a no-arg constructor plus a convenience constructor:
+
+```apex
+@JsonAccess(serializable='always' deserializable='always')
+global class RetailShoppingCarouselData {
+    @AuraEnabled
+    global String productsJSON;
+
+    global RetailShoppingCarouselData() {}
+
+    global RetailShoppingCarouselData(String productsJSON) {
+        this.productsJSON = productsJSON;
+    }
+}
+```
+
+### Piece 2 — LightningType bundle
+
+Three files under `force-app/main/default/lightningTypes/<Folder>/`. `schema.json` binds field-by-field to the DTO with a `c__` prefix; `renderer.json` binds to the LWC; the `-meta.xml` wraps both.
+
+`schema.json`:
+```json
+{
+  "type": "object",
+  "properties": {
+    "c__productsJSON": {
+      "type": "string",
+      "title": "Products JSON"
+    }
+  }
+}
+```
+
+`renderer.json`:
+```json
+{
+  "type": "component",
+  "component": {
+    "name": "c/retailShoppingCarousel"
+  }
+}
+```
+
+`Retail_ShoppingCarousel.lightningTypeBundle-meta.xml`:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningTypeBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>66.0</apiVersion>
+    <masterLabel>Retail Shopping Carousel</masterLabel>
+    <description>Renders a horizontal product carousel inside an Agentforce chat bubble.</description>
+</LightningTypeBundle>
+```
+
+### Piece 3 — LWC bundle
+
+`.js` with an `@api value` getter/setter (never a plain `@api` property — Failure Mode #9), `.html`, `.css`, and a `.js-meta.xml` with the `lightning__AgentforceOutput` target and a `<targetConfigs>` binding (Failure Mode #12). This bundle was already generated at Step 4 from the approved HTML. The full four-file shape, including the anti-patterns to avoid, is in `references/html-to-lwc-transforms.md` under "The receiving wrapper" and the end-to-end example.
+
+### Piece 4 — Invocable Apex
+
+`@InvocableMethod` returning both a displayable DTO output and a plain-text narrative for the LLM to speak:
+
+```apex
+public with sharing class RetailShoppingCarouselService {
+    public class Request {
+        @InvocableVariable(required=true)
+        public String category;
+    }
+
+    public class Response {
+        @InvocableVariable
+        public RetailShoppingCarouselData carousel;
+
+        @InvocableVariable
+        public String narrative;
+    }
+
+    @InvocableMethod(label='Get Shopping Carousel' description='Returns a displayable product carousel plus a narrative for the LLM.')
+    public static List<Response> getCarousel(List<Request> requests) {
+        List<Response> responses = new List<Response>();
+        for (Request req : requests) {
+            List<Product2> products = [
+                SELECT Id, Name, ProductCode
+                FROM Product2
+                WHERE Family = :req.category
+                LIMIT 4
+            ];
+            Response res = new Response();
+            res.carousel = new RetailShoppingCarouselData(JSON.serialize(products));
+            res.narrative = 'Here are ' + products.size() + ' picks in ' + req.category + '.';
+            responses.add(res);
+        }
+        return responses;
+    }
+}
+```
+
+### Piece 5 — Agent Script `.agent`
+
+The action needs exactly two magic lines on its displayable output — `is_displayable: True` and `complex_data_type_name: "c__<LightningTypeFolder>"`. Without both, the chat surface prints raw text or JSON instead of mounting the card (Failure Mode #7):
+
+```yaml
+topic shopping_topic:
+  label: "Shopping"
+  description: "Shows a branded product carousel for a category."
+  reasoning:
+    instructions: ->
+      | When the user asks to see products in a category, call
+      | get_shopping_carousel with that category and let the narrative
+      | introduce the carousel.
+    actions:
+      get_shopping_carousel:
+        invocable: RetailShoppingCarouselService
+        inputs:
+          category: String
+        outputs:
+          carousel:
+            type: String
+            is_displayable: True
+            complex_data_type_name: "c__Retail_ShoppingCarousel"
+          narrative:
+            type: String
+```
+
+### Two required pairings — must match exactly
+
 - DTO field name ↔ LWC reads. DTO declares `@AuraEnabled global String productsJSON;` → LWC reads `this.value.productsJSON`.
 - Apex `Response.<field>` ↔ `.agent outputs.<key>`. `Response.carousel` ↔ `outputs.carousel`.
 
-**Naming conventions** (also in `experience-cloud-site-builder` Phase 2):
+### Naming conventions
+
 | Layer | Example | Style |
 |---|---|---|
 | LightningType folder | `Retail_ShoppingCarousel` | PascalCase + underscore |
 | LWC bundle | `retailShoppingCarousel` | lowerCamelCase |
 | Apex DTO class | `RetailShoppingCarouselData` | PascalCase |
 
-**Documentation export (`E=export docs`):** invokes Phase 12 of `experience-cloud-site-builder` — generates `BUILD_PROCESS.md` + Mermaid sequence diagram + runbook in the project root.
+### Deploy sequence (Step 11)
+
+The skill never runs `sf project deploy start` itself. It prints this sequence and the user runs it, in this order — deploy order matters, because the LightningType and LWC reference each other, and the agent bundle can't validate against pieces that aren't deployed yet:
+
+```bash
+# 1. Apex — DTO first, then the Invocable service
+sf project deploy start --source-dir force-app/main/default/classes/RetailShoppingCarouselData.cls --target-org <alias> --ignore-conflicts
+sf project deploy start --source-dir force-app/main/default/classes/RetailShoppingCarouselService.cls --target-org <alias> --ignore-conflicts
+
+# 2. LightningType bundle + LWC bundle — deploy together
+sf project deploy start \
+  --source-dir force-app/main/default/lightningTypes/Retail_ShoppingCarousel \
+  --source-dir force-app/main/default/lwc/retailShoppingCarousel \
+  --target-org <alias> --ignore-conflicts
+
+# 3. Permission set (Apex class access + LightningType access)
+sf project deploy start --source-dir force-app/main/default/permissionsets/<PermSetName>.permissionset-meta.xml --target-org <alias> --ignore-conflicts
+
+# 4. CspTrustedSite — only if the card loads images from an external host
+sf project deploy start --source-dir force-app/main/default/cspTrustedSites --target-org <alias> --ignore-conflicts
+
+# 5. Agent bundle — validate, publish, activate, in that order
+sf project deploy start --source-dir force-app/main/default/aiAuthoringBundles/<AgentName> --target-org <alias> --ignore-conflicts
+sf agent publish authoring-bundle --json --api-name <AgentName> --target-org <alias>
+sf agent activate --api-name <AgentName> --target-org <alias>
+
+# 6. Assign the permission set to the bot user, not the CLI/admin user (Failure Mode #13)
+sf org assign permset --name <PermSetName> --target-org <alias> --on-behalf-of <BotUserUsername>
+
+# 7. Verify
+sf data query --query "SELECT Id, DeveloperName FROM BotDefinition WHERE DeveloperName = '<AgentName>'" --target-org <alias>
+```
+
+Assigning the permset to the wrong user is the single most common late-stage failure: the build looks complete, deploys clean, and then the agent throws `insufficient access rights on cross-reference id` the first time it tries to run the action.
+
+**Documentation export (`E=export docs`):** writes three files to the project root —
+- `BUILD_PROCESS.md` — the decisions made at each step (naming, pattern, brand tokens), every file written, every command the user ran, and any Debug Log entries.
+- A Mermaid sequence diagram — Figma extraction → HTML preview approval → LWC transform → 5-piece contract writes → deploy → chat render.
+- A deployment runbook — prerequisites checklist, the manual UI steps in order, the automated deploy sequence above, and rollback steps (deactivate the agent, remove the permset assignment, retract the LightningType).
 
 ---
 
@@ -572,7 +724,7 @@ Every substantive action produces this shape:
 **Rules:**
 - Progress label uses `~` because M can drift ±2.
 - What is past tense, one line, no more.
-- Why is one sentence, cites a failure mode by number when relevant (`Failure Mode #N in experience-cloud-site-builder`).
+- Why is one sentence, cites a failure mode by number when relevant (`Failure Mode #N` — full write-up in `references/failure-mode-crosswalk.md`).
 - Next tees up the next step by number and topic.
 - Footer is progressive-unlock.
 
@@ -612,7 +764,7 @@ Every substantive action produces this shape:
 ✓ Step 8 of ~11 — LWC bundle written.
 
   What: Wrote retailShoppingCarousel/{.js,.html,.css,.js-meta.xml} with an @api value getter/setter that parses productsJSON from the DTO.
-  Why:  The chat client updates value after mount; a plain @api prop reads once and never re-renders. Failure Mode #9 in experience-cloud-site-builder.
+  Why:  The chat client updates value after mount; a plain @api prop reads once and never re-renders. Failure Mode #9 (see references/failure-mode-crosswalk.md).
   Next: Step 9 — Piece 4, the Invocable Apex service.
 
 Type R for details on Failure Mode #9.
@@ -644,19 +796,19 @@ Full rules: `references/progress-labels.md`.
 
 ## Failure-mode crosswalk
 
-`experience-cloud-site-builder` §C has 17 numbered failure modes plus a bonus. This skill cites them by number and lets the user type `R` for the details.
+This skill tracks 17 numbered failure modes plus a bonus entry. It cites them by number in teaching blocks and lets the user type `R` for the details.
 
 **Failure Modes proactively checked at Step 4 (LWC transform):** #8 (image host → CspTrustedSite), #9 (@api value setter), #10 (single connectedCallback), #12 (targetConfigs).
 
 Full crosswalk (all 17 + bonus, with symptom-to-diagnosis mapping): `references/failure-mode-crosswalk.md`.
 
-**The `R=details` handler:** when a Failure Mode has been cited in the last turn, `R` prints the corresponding §C section from `experience-cloud-site-builder` verbatim. If nothing has been cited: "Nothing cited yet — I'll surface R inline when I reference a specific Failure Mode."
+**The `R=details` handler:** when a Failure Mode has been cited in the last turn, `R` prints the corresponding section of `references/failure-mode-crosswalk.md` verbatim. If nothing has been cited: "Nothing cited yet — I'll surface R inline when I reference a specific Failure Mode."
 
 ---
 
 ## Debug Log format
 
-When the build hits an unexpected issue that isn't already documented in `experience-cloud-site-builder` §C, log it in the state canvas under a `## Debug Log` section. Format each entry:
+When the build hits an unexpected issue that isn't already documented in `references/failure-mode-crosswalk.md`, log it in the state canvas under a `## Debug Log` section. Format each entry:
 
 ```markdown
 ### DL-<N> — <one-line title>

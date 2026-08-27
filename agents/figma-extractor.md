@@ -79,7 +79,7 @@ Route based on the input the parent hands you:
 - Never run `sf` commands. Bash is available only for read-only operations: `find`, `grep`, `jq`, `cat` on `.mcp.json`, checksums, etc. No `sf project deploy`, no `sf data update`, no `sf apex run`, no `sf agent publish`.
 - Never fetch a URL that isn't from `figma.com` unless the parent explicitly overrides. If the input URL points elsewhere, return `{ error: "NON_FIGMA_URL", raw: "<url>" }` and stop.
 - Never return raw MCP node data or raw WebFetch HTML. Extract, compact, return the shape above. Raw payloads stay in your context and die with your context.
-- Never guess a `primary_hex` (or any color field) if extraction failed. Return `null` for that field. The parent handles fallbacks — it may prompt the user, use a default, or route to `experience-cloud-site-builder` Phase 1.2 Option C (manual).
+- Never guess a `primary_hex` (or any color field) if extraction failed. Return `null` for that field. The parent handles fallbacks — it may prompt the user, use a default, or fall back to the Manual path in `references/figma-extraction.md`.
 - Never spend more than 30 turns. If you can't extract after 20 turns, return `{ error: "EXTRACTION_TIMEOUT", partial: <whatever you have so far in the shape above> }`.
 
 ## Pattern-inference heuristics

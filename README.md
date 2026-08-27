@@ -2,7 +2,7 @@
 
 Turn a Figma design into a Lightning Web Component that renders inside an Agentforce chat bubble. The mandatory HTML preview step in the middle lets you review the design in a browser before it becomes LWC.
 
-`v0.3.0` · `experimental` · `Salesforce` · `Agentforce` · `LWC`
+`v0.4.1` · `experimental` · `Salesforce` · `Agentforce` · `LWC`
 
 ---
 
@@ -15,8 +15,10 @@ Turn a Figma design into a Lightning Web Component that renders inside an Agentf
 
 - **One linear flow with a design-review moment.** Figma → HTML preview (open in your browser and eyeball it) → LWC bundle → 5-piece contract (Apex DTO + LightningType bundle + LWC bundle + Invocable Apex + Agent Script).
 - **The HTML preview step is non-skippable.** LWC has no mid-build browser preview. The intermediary HTML catches misread Figma tokens *before* the transform + write cycle burns time on LWC files you'll have to redo.
+- **Reads Figma through the official MCP.** The plugin registers `mcp.figma.com` as an MCP server. Once you authenticate through `/mcp`, the `figma-extractor` agent pulls structured design tokens (colors, typography, spacing, node structure) straight from the file open in your Figma desktop app. PNG export and public share URL are fallbacks.
 - **Teaches at every step.** Every question is labeled `Step N of ~M — <topic>`. Every substantive action prints a `What / Why / Next` micro-block grounded in a specific LWC constraint or known failure mode.
 - **Never writes to `force-app/` or runs `sf project deploy` without explicit YES.** Load-bearing checkpoints are non-negotiable — planning, implementation, and demo are 100% local until you type YES.
+- **Blocks `sf project deploy` when image URLs in Apex classes 404.** A PreToolUse hook (`hooks/verify-image-urls.sh`) scans staged `*.cls` files for `.jpg` / `.png` / `.gif` / `.webp` / `.svg` URLs before every deploy and fails the command with a fix path if any return 4xx/5xx. Prevents Failure Mode #8 (broken images render as blank slots in the chat card) from reaching a running org.
 
 > **Earlier multi-entry version** (Figma / HTML / existing LWC / scan-my-folder) is archived at `~/Documents/claude/plugin homework/lwc-to-agentforce-chat-multi-entry/` for reference.
 
@@ -77,28 +79,12 @@ lwc-to-agentforce-chat/
 │   └── lwc-to-agentforce-chat/     ← the skill (SKILL.md + references/ + assets/)
 ├── agents/
 │   └── figma-extractor.md          ← subagent for heavy Figma processing
+├── hooks/
+│   ├── hooks.json                  ← PreToolUse hook registration
+│   └── verify-image-urls.sh        ← blocks sf project deploy on 4xx/5xx image URLs
 └── fixtures/
     └── example-html/       ← HTML→LWC before/after reference for Step 4; not an entry point
 ```
-
-## Homework rubric — how this plugin satisfies each requirement
-
-| Requirement | How this plugin satisfies it |
-|---|---|
-| ≥1 agent doing meaningful work | `agents/figma-extractor.md` — read-only agent that extracts a Brand Summary + pattern inference from Figma URLs or images and keeps large payloads out of parent context |
-| ≥1 skill | `skills/lwc-to-agentforce-chat/SKILL.md` — guided linear walkthrough (Figma → HTML preview → LWC), with a mandatory design-review step in the middle |
-| ≥1 hook OR MCP config | `.mcp.json` — official remote Figma MCP server for structured design context |
-| Fresh-clone install <5 min | `git clone → marketplace add . → plugin install` — no Salesforce auth required |
-| Meaningful problem for specific persona | Retail-enterprise Salesforce front-end developer with a Figma design who needs a correctly wired Agentforce in-chat LWC |
-| README explains what/for whom/how | This file |
-
-## Optional Salesforce skill integrations
-
-The plugin is self-contained for local preview. When the following Salesforce skills are already installed, it consults them for deeper platform guidance instead of forking their full content:
-
-- **`experience-cloud-site-builder`** (v1.0, 3920 lines) — for the 5-piece contract templates, deploy sequence (Phase 8), manual UI steps (Phase 9), and 17 failure modes catalog (§C). This plugin references by name; never restates.
-- **`generating-lwc-components`** — for general LWC best practices (a11y, Jest, wire adapters) beyond the 8 HTML→LWC transforms.
-- **`applying-slds`** — for SLDS blueprints and styling hooks when the HTML source lacks them.
 
 ## Guardrails
 
@@ -194,6 +180,10 @@ Two common causes:
 
 The plugin never runs `sf` commands autonomously. It previews the deploy command and asks you to run it yourself. If you don't have `sf` installed, follow the [Salesforce CLI install guide](https://developer.salesforce.com/tools/salesforcecli). The plugin's demo path (`fixtures/example-html/`) works without `sf`.
 
+**`sf project deploy` is being blocked with an "Image URL verification failed" message.**
+
+The PreToolUse hook at `hooks/verify-image-urls.sh` scanned your staged `*.cls` files, found a `.jpg` / `.png` / `.gif` / `.webp` / `.svg` URL, and curl returned a 4xx or 5xx status on it. This is intentional — Failure Mode #8 (broken images render as blank slots in the chat card) is one of the most common ways an in-chat LWC ships silently broken. Follow the three-step fix path printed on stderr: attempt WebFetch on any brand URL the user has already mentioned, ask the user for verified URLs if that fails, then curl each new URL to 200 before retrying the deploy. Non-image URLs (product page links, docs) are not checked. To bypass in an offline run: the hook already exits 0 on curl network errors (status `000`), so genuine offline deploys aren't blocked.
+
 ## Uninstall
 
 ```
@@ -202,16 +192,4 @@ The plugin never runs `sf` commands autonomously. It previews the deploy command
 
 Or delete the plugin directory. Nothing was written to any Salesforce sandbox, so there's no cleanup on the org side.
 
-## License & credits
-
-- MIT-licensed. See `LICENSE`.
-- Built on top of the `experience-cloud-site-builder` v1.0 skill by Shing Diorio.
-- Modeled on FDE conventions from `forward-deployed-engineering-emu/fde-skills/plugins/designing-agentforce`.
-- 5-piece contract, 17 failure modes, and deploy sequence all sourced from `experience-cloud-site-builder` — this plugin references, does not restate.
-
-## See also
-
-- `GUIDE.md` — one-page recipe for building your own plugin around a different entry-point workflow (Miro → Flow, Postman → REST, Airtable → Custom Object, etc.).
-- `CHANGELOG.md` — version history.
-- `skills/lwc-to-agentforce-chat/SKILL.md` — the guided-wizard skill this plugin bundles.
-- `skills/lwc-to-agentforce-chat/references/` — the six reference files the skill consults during walkthroughs.
+MIT-licensed. See `LICENSE`.
