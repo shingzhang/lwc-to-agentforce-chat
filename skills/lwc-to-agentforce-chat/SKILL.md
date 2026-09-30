@@ -487,6 +487,8 @@ sf agent activate --json --api-name RetailShoppingAgent --target-org <alias>
 sf org assign permset --json --name Retail_Shopping_Carousel_Access --target-org <alias> --on-behalf-of <BotUserUsername>
 ```
 
+**If `sf agent publish authoring-bundle` returns `AgentApiNotFound` / `ERROR_HTTP_404`:** stop retrying. That command calls an external SFAP API the org may not be entitled for — re-login and connected-app scope fixes will not clear a 404. Pivot to the Agentforce Builder **code-view** go-live path (create the agent from a template, paste the Agent Script surgically, Save, Activate). This needs no SFAP entitlement and is the default on demo/storm/scratch orgs. Full path selection, builder-generation detection, and the dead ends to skip are in `references/go-live-and-publish.md`.
+
 Do not claim completion until the user tests a prompt in the deployed chat surface and confirms the card rendered. A draft Agent Builder preview may not render a CLT output card; test the committed, activated agent in its deployed surface.
 
 ## Teaching block format
@@ -501,7 +503,7 @@ Why: <one constraint or failure prevented>.
 Next: <next numbered question>.
 ```
 
-See `references/teaching-blocks.md` and `references/failure-mode-crosswalk.md` for troubleshooting, but keep the live response concise.
+See `references/teaching-blocks.md` and `references/failure-mode-crosswalk.md` for troubleshooting, and `references/go-live-and-publish.md` for choosing the publish/go-live path when the CLI publish 404s, but keep the live response concise.
 
 ## Final completeness check
 
