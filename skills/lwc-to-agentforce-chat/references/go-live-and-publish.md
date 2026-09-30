@@ -168,10 +168,10 @@ the `.agent` grammar are available in the org's CLI/Builder, it's the new model.
 
 ---
 
-## Implication for this skill's Step 13
+## Implication for this skill's go-live check-in (Check-in 4)
 
-Step 13 currently assumes `sf agent publish authoring-bundle` succeeds. On demo/
-storm/scratch orgs it commonly 404s. Step 13 should:
+Go-live must not assume `sf agent publish authoring-bundle` succeeds. On demo/
+storm/scratch orgs it commonly 404s. Check-in 4 should:
 
 1. Keep the normal metadata deploy (transactional, full scope, confirm counts).
 2. Attempt CLI publish, but treat `AgentApiNotFound` / `ERROR_HTTP_404` as a

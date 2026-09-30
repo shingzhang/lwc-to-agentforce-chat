@@ -1,7 +1,7 @@
 {
   "name": "lwc-to-agentforce-chat",
-  "description": "Turn a retail Figma design into a deployable Agentforce in-chat LWC, with a mandatory HTML review and complete Salesforce metadata wiring. Bundles the guided skill, a read-only Figma extractor agent, a deploy guard hook, and the official Figma MCP endpoint.",
-  "version": "0.6.0",
+  "description": "Turn a retail Figma design into a deployable Agentforce in-chat LWC, with a mandatory HTML review and complete Salesforce metadata wiring. Bundles the guided skill, a read-only Figma extractor agent, preview-time and deploy-time image-URL guard hooks, and the official Figma MCP endpoint.",
+  "version": "0.7.0",
   "author": {
     "name": "Shing Diorio",
     "email": "shing.diorio@salesforce.com"

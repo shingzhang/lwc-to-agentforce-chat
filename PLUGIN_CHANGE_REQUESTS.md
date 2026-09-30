@@ -6,9 +6,18 @@ Apply these to the skill — and decide the hook question — before the next re
 
 Status legend: 🔲 requested · 🟡 partially done · ✅ shipped
 
+**Update 2026-09-30:** Items #1–#6 shipped in SKILL.md 0.7.0. The workflow now
+counts **~5 check-ins** (interaction points) instead of 13 internal steps; image
+collection + validation moved into the preview; the agent name is asked at the
+naming step; the go-live step branches (CLI Path A → Builder code-view Path B →
+classic Path C). A new preview-time hook (`hooks/verify-preview-images.sh`)
+validates image URLs return 2xx before a `*.preview.html` is written. The
+open-decision below is resolved: instructions for the reordering + check-in, a
+hook for image validation.
+
 ---
 
-## 1. Always check in on the HTML at the preview step 🟡
+## 1. Always check in on the HTML at the preview step ✅
 
 **Want:** At the HTML-preview step, always stop and get my reaction to the
 rendered result before doing anything else. This is the one front-half check-in
@@ -24,7 +33,7 @@ source exists. Everything downstream depends on the design being right.
 
 ---
 
-## 2. Move image handling INTO the preview step 🔲
+## 2. Move image handling INTO the preview step ✅
 
 **Want:** Collect and validate the real product image URLs *at the HTML preview
 step*, not later. During the preview I want to:
@@ -50,7 +59,7 @@ product page, right-click the main image → "Copy Image Address."
 
 ---
 
-## 3. Ask for the agent name before defaulting it 🔲
+## 3. Ask for the agent name before defaulting it ✅
 
 **Want:** At the naming step (Step 5), explicitly ask me what to name the
 **agent** (bundle API name + label) rather than silently defaulting it to
@@ -79,7 +88,7 @@ I have to catch it late and rename across the bundle folder, files, and config.
 
 ---
 
-## 4. Always show which step we're on 🔲
+## 4. Always show which step we're on ✅
 
 **Want:** In every substantive response, state the current step explicitly —
 e.g. "Step 13 of 13 — publish/activate/assign." When a single step has multiple
@@ -102,7 +111,7 @@ that each turn updates and echoes.
 
 ---
 
-## 5. "Steps" should mean interaction points, not internal actions 🔲
+## 5. "Steps" should mean interaction points, not internal actions ✅
 
 **Want:** Stop numbering the workflow as ~13 steps that each look like they need
 me. A "step" I'm shown should only exist when you have a question for me or need
@@ -135,7 +144,7 @@ visible counter runs over *interaction points*, not internal build steps.
 
 ---
 
-## 6. Branch the go-live step; the CLI publish is not the only (or reliable) path 🔲
+## 6. Branch the go-live step; the CLI publish is not the only (or reliable) path ✅
 
 **Want:** Step 13 shouldn't assume `sf agent publish authoring-bundle` works. On
 this build it never did — the org (a storm/demo org) returned a clean
