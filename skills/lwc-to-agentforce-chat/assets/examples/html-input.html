@@ -1,0 +1,51 @@
+<!--
+  Example input for Entry 2 (HTML → LWC).
+
+  Fully fictional. "Willa's Corner Grocery" is a made-up retail brand.
+  No real product images or catalog data.
+
+  This snippet exercises four of the eight transforms in
+  references/html-to-lwc-transforms.md:
+
+    T1  onclick handler binding      -> {handleAddToBag}
+    T2  onchange input event binding -> {handleQuantityChange}
+    T3  external <img> src           -> triggers CspTrustedSite
+    T4  inline style="..."           -> scoped .css sibling
+
+  A template-engine `if` block is simulated as a prose comment
+  (this is raw HTML, so no directive present yet).
+-->
+
+<article class="product-card" style="border-radius: 12px; background: #F4EBDA;">
+  <img
+    src="https://assets.willas-corner-grocery.example/products/coffee-maker.jpg"
+    alt="Six-cup pour-over coffee maker"
+    style="width: 100%; aspect-ratio: 1/1;"
+  />
+
+  <h3 style="color: #2E5D3B; font-family: Sora;">Six-Cup Pour-Over</h3>
+  <p style="color: #1F2A24;">$48.00</p>
+
+  <!-- IF product.availability === 'low_stock' THEN render this badge -->
+  <span class="badge" style="background: #E4A853; color: #1F2A24;">
+    Only 3 left
+  </span>
+
+  <label style="display: block; margin-top: 8px;">
+    Qty
+    <input
+      type="text"
+      value="1"
+      data-product-id="pour-over-6cup"
+      onchange="handleQuantityChange(this.value)"
+    />
+  </label>
+
+  <button
+    data-product-id="pour-over-6cup"
+    onclick="handleAddToBag(this.dataset.productId)"
+    style="background: #2E5D3B; color: #FFFFFF; border-radius: 8px; padding: 12px 20px;"
+  >
+    Add to bag
+  </button>
+</article>

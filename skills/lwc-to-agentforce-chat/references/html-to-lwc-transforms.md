@@ -1,6 +1,6 @@
 # HTML → LWC Transformations — reference
 
-At Step 4 (§B Phase 2), once the user has approved the HTML preview generated at Step 3, the skill runs these 8 transforms in order against that approved HTML. Each transform is teachable — the What/Why/Next micro-block cites the transform by number so the user learns *why* the change is needed, not just *that* it happened.
+When Entry point 2 fires (user has an HTML/CSS prototype), the skill runs these 8 transforms in order. Each transform is teachable — the What/Why/Next micro-block cites the transform by number so the user learns *why* the change is needed, not just *that* it happened.
 
 Transforms 1–8 are applied to the source HTML in sequence. The three "receiving wrapper" additions (§ **The receiving wrapper**) come after, once the LWC template is clean. The end-to-end example at the bottom shows all four files (`.html`, `.css`, `.js`, `.js-meta.xml`) side-by-side.
 
@@ -24,7 +24,7 @@ Transforms 1–8 are applied to the source HTML in sequence. The three "receivin
 - **Gotchas**:
   - `onclick="fn(this)"` — the `this` argument has no LWC equivalent. Change to `onclick={fn}` and read `event.target` inside the method body.
   - Handler names must exist as class methods on the component. If the source had inline logic (`onclick="alert('x')"`), extract it into a named method first.
-- **Failure mode**: none — the LWC compiler catches this at build time with a clear error.
+- **Failure mode**: none in `experience-cloud-site-builder` §C — the LWC compiler catches this at build time with a clear error.
 
 ---
 
@@ -86,7 +86,7 @@ Plus `force-app/main/default/cspTrustedSites/Assets_Example_Com.cspTrustedSite-m
 - **Gotchas**:
   - `alt=""` is required even for decorative images; failure to set `alt` breaks a11y and Failure Mode #8 sometimes masks itself as an a11y issue.
   - Handling image load failure: hide broken images (`event.target.style.display = 'none'`) rather than falling back to a placeholder URL — a placeholder that also 404s creates a broken-image loop.
-- **Failure mode**: **Failure Mode #8 — Card renders, images blank.** Full fix in `references/failure-mode-crosswalk.md`.
+- **Failure mode**: `experience-cloud-site-builder` §C **Failure Mode #8 — Card renders, images blank.** Fix in v1 skill.
 
 ---
 
@@ -163,7 +163,7 @@ export default class ShoppingCarousel extends LightningElement {
   - `document.querySelector` becomes `this.template.querySelector` — the shadow DOM boundary means `document` can't see inside the component.
   - `window.addEventListener('load', ...)` becomes the `connectedCallback` lifecycle hook.
   - Use a single `connectedCallback` per file. Duplicating it silently overrides the earlier definition — the classic Failure Mode #10 shape.
-- **Failure mode**: **Failure Mode #10 — Card mounts, value populated, template renders blank** (when a duplicate `connectedCallback` overrides the one that runs your parse logic). Full fix in `references/failure-mode-crosswalk.md`.
+- **Failure mode**: `experience-cloud-site-builder` §C **Failure Mode #10 — Card mounts, value populated, template renders blank** (when a duplicate `connectedCallback` overrides the one that runs your parse logic).
 
 ---
 
@@ -270,11 +270,11 @@ get cardClass() {
 
 Once the 8 transforms are applied, the LWC that renders in chat needs three additional pieces beyond a "normal" LWC:
 
-1. **`@api value` getter/setter** — a reactive pattern that re-parses the incoming DTO on every update. A plain `@api value;` prop reads once at mount and never reacts to updates from the chat client. This is **Failure Mode #9 — Card mounts, value populated, template renders blank** (or `undefined`) if the setter isn't wired. Full fix in `references/failure-mode-crosswalk.md`.
+1. **`@api value` getter/setter** — a reactive pattern that re-parses the incoming DTO on every update. A plain `@api value;` prop reads once at mount and never reacts to updates from the chat client. This is `experience-cloud-site-builder` §C **Failure Mode #9 — Card mounts, value populated, template renders blank** (or `undefined`) if the setter isn't wired.
 
 2. **`.js-meta.xml` targets** — the target list must include `<target>lightning__AgentforceOutput</target>`. Without this target, the chat surface can't mount the component at all.
 
-3. **`<targetConfigs>` binding** — inside `.js-meta.xml`, add a `<targetConfigs>` block with `<sourceType name="c__<LightningTypeFolder>"/>` so the chat client knows which Lightning Type resolves to this LWC. Missing or mismatched, this is **Failure Mode #12** — the card silently fails to mount (looks like a permissions issue; the real cause is the missing sourceType binding). Full fix in `references/failure-mode-crosswalk.md`.
+3. **`<targetConfigs>` binding** — inside `.js-meta.xml`, add a `<targetConfigs>` block with `<sourceType name="c__<LightningTypeFolder>"/>` so the chat client knows which Lightning Type resolves to this LWC. Missing this binding causes `experience-cloud-site-builder` §C **Failure Mode #12 — `areGuestUsersAllowed` silently blocks the card renderer** (misleading name — the real cause is often the missing sourceType binding).
 
 The end-to-end example below shows all three.
 
@@ -361,10 +361,7 @@ Transforms exercised: **1** (`onclick` binding on `<button>`), **3** (external i
 
 ---
 
-## Beyond these 8 transforms
+## Cross-references
 
-The full Piece 3 contract — the `@api value` getter/setter, the `.js-meta.xml` target + targetConfigs shape, and the anti-patterns to avoid — is in "The receiving wrapper" section above and in `SKILL.md` §B Phase 5. For LWC concerns outside the scope of these 8 transforms:
-
-- **Accessibility basics**: every interactive element needs a visible focus state and a real `<button>` or `<a>` (not a `<div onclick>`); every `<img>` needs `alt` text, even if empty for decorative images; card text should hit at least 4.5:1 contrast against its background.
-- **Jest tests**: use `@salesforce/sfdx-lwc-jest`. At minimum, test that the `@api value` setter parses a representative JSON payload into the expected tracked fields, and that a malformed payload doesn't throw past the try/catch.
-- **Wire adapters**: not used by the chat-card pattern in this skill — cards receive data via `@api value` from the chat client, not `@wire`. If a card also needs to read live org data on its own (rare), `@wire(getRecord, ...)` works the same as in any other LWC.
+- **REQUIRED:** `experience-cloud-site-builder` Phase 2 Piece 3 — the full LWC bundle contract, including the reactive `@api value` pattern, the anti-patterns (single `connectedCallback`, image error handling), and the exact `.js-meta.xml` shape.
+- **RECOMMENDED:** `generating-lwc-components` — a11y patterns (labels, focus management, keyboard nav), Jest test scaffolding, wire adapter patterns, and any LWC concern beyond these 8 transforms.
