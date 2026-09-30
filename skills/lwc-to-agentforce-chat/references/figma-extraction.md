@@ -2,19 +2,18 @@
 
 ## When this reference applies
 
-Consulted from Entry point 1 of `lwc-to-agentforce-chat` — when the user has a Figma design (URL, share link, exported PNG, or JPG) and wants to turn it into an LWC that renders inside an Agentforce chat bubble. The parent skill routes here at Step 3 of Entry 1 (the "extract design tokens" step) and again at Step 4 (the "infer pattern from visual structure" step).
+Consulted from `SKILL.md` Step 2 (§B Phase 1), when the user has a Figma design (URL, share link, exported PNG, or JPG) and wants to turn it into an LWC that renders inside an Agentforce chat bubble. Step 2 both extracts the design tokens and infers the pattern from the visual structure; both happen in this one step, and this file covers both.
 
-Not consulted from Entries 2, 3, or 4 unless the user pivots mid-flow. If Entry 4 (folder scan) detects Figma-shaped assets and the user picks Entry 1, we land here. If the user provided a public URL at Step 1 as source material, we run this reference before the surface picker even shows.
+If the user pastes a Figma URL or file path with their first message, the skill skips the opening prompt and runs this reference immediately.
 
-## Path A — Figma MCP (if configured)
+## Path A — Figma MCP (if available in the session)
 
-**How to detect.** Before Step 3, check for Figma MCP availability:
+**How to detect.** Availability is decided by tools in the current session, not by config files. A server can be registered in config and still be unavailable (unauthenticated, disconnected, or crashed). Check in this order:
 
-1. Inspect `~/.claude/settings.json` for an `mcpServers` entry whose name or URL contains `figma`.
-2. Inspect `<project-root>/.mcp.json` (if present) for the same.
-3. Look for `mcp__figma__*` tool names in the current session's available tools.
+1. Look for `mcp__figma__*` tool names in the current session's available tools. This is the authoritative check.
+2. If no such tools exist, inspect `<plugin-root>/.mcp.json`, `<project-root>/.mcp.json`, or `~/.claude/settings.json` for an `mcpServers` entry whose name or URL contains `figma`. If one is found but no tools exist, the MCP is registered but not authenticated or not connected — surface that state to the user (see the fallback message below).
 
-If any of these hit, Path A is available. Otherwise fall through to Path B.
+If step 1 hits, Path A is available. Otherwise fall through to Path B or C, and tell the user why (registered-but-unauthenticated vs. not-registered-at-all is a meaningful difference for troubleshooting).
 
 **What to fetch.** Given the user's Figma URL (or a specific `node-id` query param), request:
 - **Frame by ID** — if the URL includes `?node-id=X-Y`, fetch just that frame's subtree.
@@ -26,12 +25,12 @@ Extract from the returned node tree:
 - **Component names** — anything published as a component (they usually match brand-system names).
 - **Exact tokens** — every fill color, font-family, font-weight, font-size, letter-spacing, corner radius, spacing (padding/margin), shadow (blur/spread/color).
 
-**Structured output shape.** Emit the Brand Summary format (mirrors `experience-cloud-site-builder` Phase 1.2, line 566):
+**Structured output shape.** Emit the Brand Summary format below:
 
 ```
 Brand Summary
 ─────────────────────────────
-Primary:    #C41E3A (WSI Red)
+Primary:    #C41E3A (Retail Red)
 Secondary:  #1A1A1A
 Accent:     #FFB81C
 Text:       #333333
@@ -53,13 +52,13 @@ The `Spacing:` row is new vs v1 — Figma MCP gives us the design's spacing scal
 | A date grid (7-column layout) + a time-slot pill group | **appointment scheduler** |
 | A status timeline (dot-line-dot-line-dot horizontal or vertical) | **order status card** |
 | A vertical 3-card stack with a reasoning-line text node above | **product picks** |
-| Anything else | Ask user; fall back to `experience-cloud-site-builder` full wizard |
+| Anything else | Ask user directly — see the Manual fallback below |
 
 Print the recommendation with the reasoning (a one-sentence explanation of which visual cue you keyed on).
 
 ## Path B — WebFetch (public Figma URL)
 
-**When to use.** No Figma MCP configured, but the URL is public/shared and reachable.
+**When to use.** Figma MCP is unavailable in this session (no `mcp__figma__*` tools), and the URL is a public/shared Figma link that returns rendered HTML. Note: `figma.com/design/…?m=dev` editor URLs are a canvas SPA and typically return only the login shell to WebFetch — for those, Path A (MCP) or Path C (screenshot) is the working route. When falling back to Path B, say why explicitly, e.g. "Figma MCP is registered but not authenticated — run `/mcp` to authenticate. Falling back to WebFetch."
 
 **Command shape.**
 ```
@@ -97,7 +96,7 @@ Before Path B fires, print the URL and require YES:
 ```
 About to fetch this Figma URL:
 
-  https://www.figma.com/design/EXAMPLE/willa-shopping-carousel?node-id=1-42
+  https://www.figma.com/design/EXAMPLE/example-shopping-carousel?node-id=1-42
 
 Some Figma URLs carry tokens or session IDs in the path. Confirm this
 URL is safe to fetch — it will pass through WebFetch and may hit logs.
@@ -109,12 +108,12 @@ Do not fetch until YES. If the user pastes a screenshot path instead, switch to 
 
 ## Brand Summary output shape
 
-Print this exact shape after extraction completes (regardless of which path ran). The parent skill uses this as input to Step 5's Brand Summary confirmation:
+Print this exact shape after extraction completes (regardless of which path ran). The parent skill uses this as input to Step 2's Brand Summary confirmation:
 
 ```
 Brand Summary
 ─────────────────────────────
-Primary:    #C41E3A (WSI Red)
+Primary:    #C41E3A (Retail Red)
 Secondary:  #1A1A1A
 Accent:     #FFB81C
 Text:       #333333
@@ -131,8 +130,17 @@ Reply YES to proceed, or describe corrections
 
 If Path B ran, omit `Spacing:` (we don't have it). If Path C ran, add `(inferred)` next to any token that wasn't clearly visible.
 
-## Cross-references
+## Manual fallback (no Figma, no screenshot)
 
-**REQUIRED:** Use `experience-cloud-site-builder` Phase 1.2 for the underlying Brand Summary shape, the "URL / screenshot / manual" three-option pattern, and the Manual fallback (colors + font + logo as literal user input).
+If none of Path A/B/C apply — no MCP, no fetchable URL, no image file — ask the user directly for the tokens instead of guessing:
 
-**RECOMMENDED:** Use `applying-slds` for translating extracted tokens into SLDS styling hooks if the LWC should map to SLDS design tokens rather than raw hex — e.g., `--slds-c-button-brand-color-background` instead of `#C41E3A`. This matters when the customer wants their card to inherit theme updates without re-deploying the LWC.
+- Primary color (hex)
+- Accent/secondary color (hex)
+- Logo file path or URL
+- Font preference
+
+Fill in reasonable defaults for anything not asked (secondary `#1A1A1A`, text `#333333`, background `#FFFFFF`, border radius `8px`, shadow `0 2px 8px rgba(0,0,0,0.08)`) and mark them `(default)` in the Brand Summary output so the user can see what they didn't specify.
+
+## Mapping tokens to SLDS styling hooks (optional)
+
+If the LWC should inherit theme updates without a redeploy, map the extracted hex values to SLDS styling hooks instead of hardcoding them — e.g. `--slds-c-button-brand-color-background` instead of `#C41E3A`. This only matters when the customer wants the card's colors to follow their SLDS theme automatically; for a one-off brand card, raw hex in the `.css` sibling file (Transform 4 in `references/html-to-lwc-transforms.md`) is simpler and fine.

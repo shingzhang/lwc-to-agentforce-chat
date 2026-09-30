@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.1 — 2026-09-29
+
+- Reverted an accidental sync that had replaced the skill with a broader
+  four-entry-point version (Figma / HTML prototype / existing LWC / folder).
+  Restored the intended single-Figma-path flow: thirteen numbered steps, the
+  mandatory HTML preview review, and the image-URL verification hook.
+- No change to the metadata contract or the CLI lifecycle.
+
 ## 0.5.0 — 2026-08-27
 
 - Replaced the legacy metadata templates with a reduced adaptation of

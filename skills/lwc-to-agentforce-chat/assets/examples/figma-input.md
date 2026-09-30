@@ -1,14 +1,13 @@
-# Example — Entry 1 (Figma) walked through
+# Example — Figma walkthrough
 
-> Fully fictional. "Willa's Corner Grocery" is a made-up retail brand used
-> throughout this skill's examples. No real customer data.
+> Generic walkthrough. Bring your own public Figma URL. Placeholder brand
+> tokens below are illustrative only.
 
 ## Scenario
 
-Willa's Corner Grocery is a fictional neighborhood specialty grocery. The
-design team has mocked up a **shopping carousel** that should render inside
-an Agentforce chat bubble whenever a shopper asks the agent "what should
-I make for dinner tonight?"
+The design team has mocked up a **shopping carousel** that should render
+inside an Agentforce chat bubble whenever a shopper asks the agent
+"what should I make for dinner tonight?"
 
 The designer hands the developer a Figma URL and says "here's the design,
 please wire it up."
@@ -17,31 +16,35 @@ please wire it up."
 
 ```
 User: I have a Figma design I want to render in my Agentforce chat.
-      https://www.figma.com/design/EXAMPLE/willa-shopping-carousel?node-id=1-42
+      <paste-your-public-figma-share-url>
 ```
 
 ## What the skill emits
 
-```
-Step 1 of ~12 — Path picked: Entry 1 (Figma → LWC → chat).
+Since a Figma URL arrived with the first message, the skill skips the
+opening prompt and goes straight to Step 2 (extraction):
 
-Step 2 of ~12 — Fetching the Figma frame. Preview URL:
-  https://www.figma.com/design/EXAMPLE/willa-shopping-carousel?node-id=1-42
+```
+✓ Figma URL captured. State canvas created at LWC_BUILD_STATE.md.
+
+Step 2 of ~13 — May I send this exact Figma URL to WebFetch?
+  <the-URL-you-pasted>
   Reply YES to proceed.
 
 [user: YES]
 
-✓ Step 3 of ~12 — Extracted brand tokens from Figma.
+✓ Step 2 of ~13 — Extracted brand tokens from Figma.
 
-  What: Pulled primary #2E5D3B, secondary #F4EBDA, accent #E4A853,
-        font Sora, radius 12px, shadow 0 2px 12px rgba(0,0,0,0.06)
-        from frame node-1-42.
+  What: Pulled primary <#RRGGBB>, secondary <#RRGGBB>, accent <#RRGGBB>,
+        font <family>, radius <N>px, shadow <css-shadow>
+        from frame <node-id>. Pattern inferred: shopping_carousel.
   Why:  These become the LWC's CSS variables so the card matches
-        Willa's brand instead of rendering generic gray/white.
-  Next: Step 4 — I'll infer which of the 4 preset patterns this
-        Figma matches.
+        the customer's brand instead of rendering generic gray/white.
+        Extracting the pattern now means the HTML preview at Step 3
+        matches your design instead of a generic template.
+  Next: Step 3 — I'll generate a full HTML preview of the card so you
+        can review it in a browser before we transform to LWC.
 
-? · C=state · S=switch path
 ```
 
 ## Brand Summary produced
@@ -49,14 +52,15 @@ Step 2 of ~12 — Fetching the Figma frame. Preview URL:
 ```
 Brand Summary
 ─────────────────────────────
-Primary:    #2E5D3B (Willa Sage)
-Secondary:  #F4EBDA (Cream)
-Accent:     #E4A853 (Honey)
-Text:       #1F2A24
-Background: #FFFFFF
-Font:       Sora
-Border R:   12px
-Shadow:     0 2px 12px rgba(0,0,0,0.06)
+Primary:    #<hex> (<label>)
+Secondary:  #<hex>
+Accent:     #<hex>
+Text:       #<hex>
+Background: #<hex>
+Font:       <family>
+Border R:   <N>px
+Shadow:     <css-shadow>
+Pattern:    shopping_carousel (high confidence)
 ─────────────────────────────
 ```
 
@@ -65,16 +69,20 @@ Shadow:     0 2px 12px rgba(0,0,0,0.06)
 > **Detected: shopping carousel.**
 > Reason: 4 identical horizontal siblings with image + text + price nodes.
 
-## Naming derived from prefix `wsi` (fictional)
+## Naming derived from prefix `<prefix>` (choose your own)
 
 | Piece | Identifier |
 |---|---|
-| LWC bundle | `wsiShoppingCarousel` |
-| LightningType folder | `Wsi_ShoppingCarousel` |
-| Apex DTO class | `WsiShoppingCarouselData` |
-| Invocable service | `WsiShoppingCarouselController` |
-| Agent Script action | `show_carousel` |
+| LWC bundle | `<prefix>ShoppingCarousel` |
+| LightningType folder | `<Prefix>_ShoppingCarousel` |
+| Apex DTO class | `<Prefix>ShoppingCarouselData` |
+| Invocable service | `<Prefix>ShoppingCarouselService` |
+| GenAI Function | `<Prefix>_Shopping_Carousel` |
+| Agent bundle | `<Prefix>ShoppingAgent` |
+| Permission set | `<Prefix>_Shopping_Carousel_Access` |
 
-From here the skill walks Steps 4–12 (pattern confirm → naming → preview
-Piece 1 → preview Piece 2 → ... → deploy checkpoint) with a What/Why/Next
-block after each write.
+From here the skill walks Steps 3–13 (HTML preview + review → LWC transform
+→ naming → complete metadata generation → validate/dry-run/deploy)
+with a What/Why/Next block after each write. The HTML preview at Step 3 is
+mandatory and non-skippable; the skill does not generate the LWC bundle
+until the user replies YES to the preview.

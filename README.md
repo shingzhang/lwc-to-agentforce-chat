@@ -2,7 +2,7 @@
 
 Turn a Figma design into a Lightning Web Component that renders inside an Agentforce chat bubble. The mandatory HTML preview step in the middle lets you review the design in a browser before it becomes LWC.
 
-`v0.5.0` · `experimental` · `Salesforce` · `Agentforce` · `LWC`
+`v0.5.1` · `experimental` · `Salesforce` · `Agentforce` · `LWC`
 
 ---
 
