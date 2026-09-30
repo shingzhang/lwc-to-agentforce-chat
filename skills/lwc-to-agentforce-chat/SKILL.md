@@ -15,8 +15,8 @@ description: >
 license: MIT
 experimental: true
 metadata:
-  version: "0.5.0"
-  last_updated: "2026-08-27"
+  version: "0.6.0"
+  last_updated: "2026-09-29"
 allowed-tools:
   - Bash
   - Read
@@ -37,11 +37,12 @@ Do meaningful implementation work, but teach as you go. Never dump this whole fi
 
 ## Operating rules
 
-- Ask exactly one question at a time.
-- Label every question `Step N of ~13 — <topic>`.
-- After a substantive action, print a compact `What / Why / Next` block.
-- Require explicit `YES` before every file write, URL fetch through WebFetch, org mutation, validation, publish, activation, permission assignment, or deploy.
-- Step 3—the browser-reviewable HTML preview—is mandatory. Do not create Salesforce source until the user approves it.
+- Move forward on your own through the design-extraction and HTML-preview phase. Do not gate those steps behind approval. State the assumptions you made, act, and let the user correct the visible result.
+- Only stop to ask when something is genuinely too ambiguous to proceed sensibly (e.g. conflicting brand signals you cannot resolve, or a missing source). Otherwise pick the most reasonable option, name it, and continue.
+- Ask at most one question at a time, and only when the two rules above call for it. Label any question `Step N of ~13 — <topic>`.
+- After a substantive action, print a compact `What / Why / Next` block that leads with the assumptions you made.
+- The browser-reviewable HTML preview (Step 3) is the one mandatory human checkpoint in the front half: always render it, tell the user how to view it, and wait for their read of the *visible result* before creating any Salesforce source. This is a review of what they can see, not a pre-write approval.
+- Still require explicit `YES` before every Salesforce source write, org mutation, validation, publish, activation, permission assignment, or deploy. These are irreversible or outward-facing and keep their own checkpoints.
 - Use only fictional fixture content or user-provided brand content.
 - Keep the plugin self-contained. Do not refer the user to locally installed skills or private archive paths.
 - Run every Salesforce CLI command with `--json` first. Read the structured result before summarizing it.
@@ -55,19 +56,24 @@ This workflow produces a shopping carousel or product-picks card. It can adapt t
 
 ## Checkpoints
 
-At every checkpoint, show the path or command and enough content to review:
+There are only three kinds of mandatory checkpoint. Everything else proceeds autonomously with stated assumptions.
+
+1. **The visual review (Step 3)** — always render the HTML preview and wait for the user's read of what they can see.
+2. **The real deploy (Step 13)** — one `YES` before mutating the org.
+3. **Going live (Step 13)** — one `YES` before publish + activate + assign, shown together.
+
+At those checkpoints, show the path or command and enough content to review:
 
 ```text
 Step N of ~13 — <topic>
 
-About to <action>. Preview:
 <path or command>
 <first ~30 lines, or the complete short file/command>
 
 Reply YES to proceed, N to stop, or describe changes.
 ```
 
-Never interpret an earlier `YES` as approval for a later action.
+Never interpret an earlier `YES` as approval for a later critical action. Local source writes, extraction, and read-only/dry-run commands are not checkpoints — do them and report what you did.
 
 ## State
 
@@ -106,27 +112,20 @@ Send one of:
 
 ### Step 2 — Extract a Brand Summary
 
-Always delegate extraction to the bundled `figma-extractor` agent. Pass:
+Delegate extraction to the bundled `figma-extractor` agent automatically — no approval gate. Pass:
 
 - `source`: the original input
 - `resolved_at`: current ISO timestamp
-- `webfetch_approved`: `false` unless the user explicitly approved the exact URL in this step
+- `webfetch_approved`: `true` when the user supplied a public URL themselves (they chose to share it); otherwise `false`
 
 Routing:
 
 1. Connected Figma MCP: delegate immediately; MCP handles the design link.
-2. Public Figma URL without MCP: show the exact URL and ask `Step 2 of ~13 — May I send this URL to WebFetch?`
-3. Only after `YES`, delegate again with `webfetch_approved: true`.
-4. Figma editor URLs such as `figma.com/design/...?...m=dev` are canvas apps and generally do not yield useful WebFetch content. Ask for MCP authentication or a PNG instead.
-5. Local PNG/JPG: delegate with no network approval needed.
+2. Public Figma URL without MCP: delegate with WebFetch on the user-supplied URL — no extra confirmation, since the user pasted it.
+3. Figma editor URLs such as `figma.com/design/...?...m=dev` are canvas apps and generally do not yield useful WebFetch content. If MCP is unavailable and WebFetch returns nothing usable, that is a genuine ambiguity — ask for MCP authentication or a PNG.
+4. Local PNG/JPG: delegate directly.
 
-The agent must return structured JSON. Present its Brand Summary and ask:
-
-```text
-Step 2 of ~13 — Are these extracted brand tokens and the inferred retail pattern correct?
-
-Reply YES, or list corrections.
-```
+The agent returns structured JSON. Present its Brand Summary as the assumptions you are proceeding on, and continue to the HTML preview without waiting for approval. Call out anything the extractor flagged as invented or low-confidence so the user can catch it at the visual review. Only stop here if the extraction failed or the source is unusable.
 
 Teaching block:
 
@@ -138,21 +137,27 @@ Next: I’ll render a browser-openable HTML version before generating Salesforce
 
 ### Step 3 — Write and review the HTML preview
 
-Create one self-contained `<componentName>.preview.html` with inline CSS and realistic fictional retail products. It must mirror the inferred structure and use the extracted tokens. External product images must be user-provided and verified; otherwise use stable local or inline placeholders.
+Write one self-contained `<componentName>.preview.html` with inline CSS and realistic fictional retail products. It must mirror the inferred structure and use the extracted tokens. External product images must be user-provided and verified; otherwise use stable local or inline placeholders.
 
-Preview the path and first ~30 lines, then ask `Step 3 of ~13 — Write this HTML preview?` After `YES`, write it and tell the user how to open it. Ask:
+Write the file directly — no pre-write approval. Then state the concrete assumptions you baked in (products, colors treated as chrome vs. brand, any invented content) and tell the user exactly how to view it:
 
 ```text
-Step 3 of ~13 — Does the browser preview match the design?
-
-Reply YES to approve it, or describe edits. This step stays at Step 3 until approved.
+open <path>
 ```
 
-Do not proceed without approval.
+This is the one mandatory human checkpoint in the front half — a review of the *visible result*, not a pre-write gate:
+
+```text
+Step 3 of ~13 — Open the preview above. Does it match the design?
+
+Reply YES to approve, or describe edits. If you request changes, regenerate and re-open. This step stays here until you approve.
+```
+
+Do not create any Salesforce source until the user approves what they saw.
 
 ### Step 4 — Transform approved HTML to an LWC renderer
 
-Apply `references/html-to-lwc-transforms.md`. Generate `.html`, `.css`, `.js`, and `.js-meta.xml`. Preview all four; ask `Step 4 of ~13 — Write this LWC renderer bundle?`
+Apply `references/html-to-lwc-transforms.md`. Generate `.html`, `.css`, `.js`, and `.js-meta.xml` and write them directly — these are local, reversible source files, not a critical checkpoint. Print a short `What / Why / Next` block naming the four paths afterward.
 
 The JavaScript must use a reactive `@api value` getter/setter. The metadata must bind the renderer to the same Lightning Type name used later:
 
@@ -175,12 +180,12 @@ The JavaScript must use a reactive `@api value` getter/setter. The metadata must
 
 Keep a single `connectedCallback`, use stable keys for loops, move inline handlers into JS, and hide or replace failed images.
 
-### Step 5 — Confirm names
+### Step 5 — Name the artifacts
 
-Ask one labeled question containing proposed names:
+State the API names you are using and proceed — no approval gate. Derive them from the component; use these defaults unless the design clearly calls for different ones:
 
 ```text
-Step 5 of ~13 — Use these API names?
+Using these API names (tell me if you want different ones):
 
 LWC: retailShoppingCarousel
 Apex DTO: RetailShoppingCarouselData
@@ -189,11 +194,9 @@ Lightning Type: Retail_ShoppingCarousel
 GenAI Function: Get_Shopping_Carousel
 Agent bundle: RetailShoppingAgent
 Permission set: Retail_Shopping_Carousel_Access
-
-Reply YES or provide replacements.
 ```
 
-From this point forward, every reference must use the confirmed names exactly.
+Fold this into the same turn as the Step 3 visual review when you can, so the user can correct names and visuals at one checkpoint. From here on, every reference must use these names exactly; if the user renames later, update all references.
 
 ### Step 6 — Apex DTO
 
@@ -212,7 +215,7 @@ global class RetailShoppingCarouselData {
 }
 ```
 
-Question: `Step 6 of ~13 — Write the Apex DTO and metadata?`
+Write the DTO and its metadata directly, then note the paths in a `What / Why / Next` block. No approval gate — this is local source.
 
 ### Step 7 — Lightning Type bundle
 
@@ -253,7 +256,7 @@ Create all three files. The schema binds the Lightning Type to the Apex class; d
 </LightningTypeBundle>
 ```
 
-Question: `Step 7 of ~13 — Write the Apex-bound Lightning Type bundle?`
+Write all three files directly, then note the paths. No approval gate — this is local source.
 
 ### Step 8 — Write the approved LWC bundle
 
@@ -264,7 +267,7 @@ Re-preview final paths and the important pairings:
 - LWC JS reads `value.productsJSON`
 - Apex DTO exposes `productsJSON`
 
-Question: `Step 8 of ~13 — Write the final four-file LWC bundle?`
+Write (or reconcile) the final four-file LWC bundle directly and confirm the pairings above hold. No approval gate — this is local source.
 
 ### Step 9 — Invocable Apex service
 
@@ -302,7 +305,7 @@ public with sharing class RetailShoppingCarouselService {
 }
 ```
 
-Question: `Step 9 of ~13 — Write the Invocable Apex service and metadata?`
+Write the class and its metadata directly, then note the paths. No approval gate — this is local source.
 
 ### Step 10 — GenAI Function
 
@@ -372,11 +375,11 @@ Generate every file the wiring references.
 }
 ```
 
-Question: `Step 10 of ~13 — Write the GenAI Function metadata and schemas?`
+Write the GenAI Function metadata and both schemas directly, then note the paths. No approval gate — this is local source.
 
 ### Step 11 — Complete AiAuthoringBundle
 
-Do not handcraft a partial bundle. Preview this command and require `YES`:
+Do not handcraft a partial bundle. Run this command directly — it scaffolds local files, not an org change:
 
 ```bash
 sf agent generate authoring-bundle --json --no-spec --name "Retail Shopping Agent" --api-name RetailShoppingAgent
@@ -418,7 +421,7 @@ actions:
     source: "Get_Shopping_Carousel"
 ```
 
-Preserve the generated `config`, `system`, router, and topic structure. Add the action to a complete topic and reference it from that topic’s reasoning/actions. Preview the full edited `.agent`; ask `Step 11 of ~13 — Write this complete Agent Script bundle?`
+Preserve the generated `config`, `system`, router, and topic structure. Add the action to a complete topic and reference it from that topic’s reasoning/actions. Write the edited `.agent` directly, then note the path. No approval gate — this is local source.
 
 ### Step 12 — Permission set and conditional CSP
 
@@ -453,32 +456,30 @@ Create the permission set that the deploy flow later assigns:
 
 If the approved design uses external images, also generate a `CspTrustedSite` for each verified host and include those paths in the deploy scope. If it uses local or inline placeholders, do not create or deploy CSP metadata.
 
-Question: `Step 12 of ~13 — Write the permission set and any required trusted-site metadata?`
+Write the permission set and any required trusted-site metadata directly, then note the paths. No approval gate — this is local source. (Assignment to a user happens later in Step 13 and keeps its own checkpoint.)
 
 ### Step 13 — Validate, dry-run, deploy, and verify
 
-First run local and org-aware validation only after a dedicated `YES`:
+Validation and the dry-run do not change the org, so run them automatically and report the results:
 
 ```bash
 sf agent validate authoring-bundle --json --api-name RetailShoppingAgent
 sf project deploy start --json --dry-run --source-dir force-app/main/default/classes --source-dir force-app/main/default/lightningTypes/Retail_ShoppingCarousel --source-dir force-app/main/default/lwc/retailShoppingCarousel --source-dir force-app/main/default/genAiFunctions/Get_Shopping_Carousel --source-dir force-app/main/default/aiAuthoringBundles/RetailShoppingAgent --source-dir force-app/main/default/permissionsets/Retail_Shopping_Carousel_Access.permissionset-meta.xml --target-org <alias>
 ```
 
-Question: `Step 13 of ~13 — Run validation and this scoped dry-run?`
-
-If both pass, show a separate real deploy command with the same explicit source scope and ask:
+The real deploy **is** the first critical checkpoint. Show the real deploy command (same explicit source scope) and require `YES`:
 
 ```text
-Step 13 of ~13 — The dry-run passed. Run the real scoped deploy?
+Step 13 of ~13 — Validation and dry-run passed. Run the real scoped deploy to <alias>?
 ```
 
 When Claude runs that approved deploy through its Bash tool, the bundled PreToolUse hook checks image URLs embedded in scoped Apex files and blocks known 4xx or 5xx responses. The hook does **not** inspect commands typed manually in another terminal; say this plainly.
 
-After deployment, preview each command separately. Ask these three labeled questions in order, and wait for a new `YES` each time:
+After deployment, going live is one consolidated critical checkpoint. Show all three commands together and require a single `YES` before running them in order:
 
-1. `Step 13 of ~13 — Publish the deployed authoring bundle?`
-2. `Step 13 of ~13 — Activate the published agent?`
-3. `Step 13 of ~13 — Assign the permission set to this bot user?`
+```text
+Step 13 of ~13 — Deploy succeeded. Publish, activate, and assign the permission set to the bot user? (runs all three below)
+```
 
 ```bash
 sf agent publish authoring-bundle --json --api-name RetailShoppingAgent --target-org <alias>

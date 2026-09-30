@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.6.0 — 2026-09-29
+
+- Fewer checkpoints. The workflow now moves through design extraction, the
+  HTML preview, and all local Salesforce source writes autonomously, stating
+  the assumptions it made instead of asking to write each file.
+- Reduced the mandatory human checkpoints to three: the Step 3 visual review
+  of the rendered HTML, the real org deploy, and a single consolidated
+  publish + activate + assign confirmation. Validation and dry-run now run on
+  their own since they do not mutate the org.
+- Figma extraction runs without an approval gate; WebFetch proceeds on a
+  public URL the user supplied themselves.
+- No change to the metadata contract or the CLI lifecycle.
+
 ## 0.5.1 — 2026-09-29
 
 - Reverted an accidental sync that had replaced the skill with a broader
